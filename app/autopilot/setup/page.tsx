@@ -37,6 +37,7 @@ function base58(bytes: Uint8Array): string {
 
 function SetupContent() {
   const q = useSearchParams();
+  const source = q.get("source");
   const tier = q.get("tier") === "spot" ? "spot" : "leverage";
   const { publicKey, signMessage } = useWallet();
 
@@ -86,6 +87,8 @@ function SetupContent() {
           maxLossPct: sl,
           positionSizeUsd: size,
           active: true,
+          signalTokenAddress: source || null,
+          signalSource: source ? "solana-discovery" : null,
         }),
       });
 
@@ -106,6 +109,13 @@ function SetupContent() {
         <Link href="/tier" className="text-sm text-zinc-500">← Tier</Link>
         <div className="mt-20 mono text-xs text-zinc-600">03 / AUTOPILOT</div>
         <h1 className="mt-4 text-5xl font-semibold">Configure leverage.</h1>
+        {source && (
+          <div className="mt-5 rounded-xl border border-white/10 p-4">
+            <div className="mono text-[9px] text-zinc-600">DISCOVERY SIGNAL</div>
+            <div className="mt-2 break-all font-mono text-xs text-zinc-400">{source}</div>
+            <div className="mt-2 text-[10px] text-zinc-600">Stored as strategy metadata. Current Velocity execution remains SOL-PERP only.</div>
+          </div>
+        )}
         <p className="mt-4 max-w-xl text-sm leading-6 text-zinc-500">
           This configuration is saved to your account and evaluated by the Velocity keeper. Saving does not place an order.
         </p>
