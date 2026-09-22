@@ -1,7 +1,7 @@
 export const terminalNav = [
   ["Discover", "/discover"],
   ["Dashboard", "/dashboard"],
-  ["Autopilot", "/autopilot/setup?tier=leverage"],
+  ["Autopilot", "/autopilot"],
   ["Positions", "/positions"],
   ["Wallets", "/wallets"],
   ["History", "/history"],
