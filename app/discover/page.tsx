@@ -151,7 +151,7 @@ export default function Discover() {
                       <div className="mt-1 text-[9px] text-zinc-600">{buyRatio}% buys / 5m</div>
                     </div>
                     <Link
-                      href={"/autopilot/setup?tier=leverage&source=" + encodeURIComponent(token.address)}
+                      href={"/trade?token=" + encodeURIComponent(token.address) + "&symbol=" + encodeURIComponent(token.symbol)}
                       className="rounded-lg border border-white/10 px-3 py-2 text-[10px] text-zinc-400 hover:bg-white/5"
                     >
                       Use signal
