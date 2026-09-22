@@ -7,19 +7,32 @@ import { useWallet } from "@solana/wallet-adapter-react";
 
 function base58(bytes: Uint8Array): string {
   const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
-  let n = 0n;
-  for (const byte of bytes) n = (n << 8n) + BigInt(byte);
-  let out = "";
-  while (n > 0n) {
-    const mod = Number(n % 58n);
-    out = alphabet[mod] + out;
-    n /= 58n;
-  }
+  const digits = [0];
+
   for (const byte of bytes) {
-    if (byte === 0) out = "1" + out;
+    let carry = byte;
+    for (let i = 0; i < digits.length; i++) {
+      const value = digits[i] * 256 + carry;
+      digits[i] = value % 58;
+      carry = Math.floor(value / 58);
+    }
+    while (carry > 0) {
+      digits.push(carry % 58);
+      carry = Math.floor(carry / 58);
+    }
+  }
+
+  let result = "";
+  for (let i = digits.length - 1; i >= 0; i--) {
+    result += alphabet[digits[i]];
+  }
+
+  for (const byte of bytes) {
+    if (byte === 0) result = "1" + result;
     else break;
   }
-  return out || "1";
+
+  return result;
 }
 
 function SetupContent() {
