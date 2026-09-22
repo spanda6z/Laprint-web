@@ -1,0 +1,1 @@
+"use client";import {WalletMultiButton} from "@solana/wallet-adapter-react-ui";export default function ConnectWallet(){return <WalletMultiButton style={{width:"100%",justifyContent:"center",background:"#fff",color:"#000",borderRadius:12,fontSize:14,height:52}}/>}
