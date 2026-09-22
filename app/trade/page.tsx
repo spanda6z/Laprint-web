@@ -163,6 +163,13 @@ function TradeContent() {
               {busy ? "Processing…" : "Sign & swap"}
             </button>
 
+            <Link
+              href={"/autopilot/spot?token=" + encodeURIComponent(mint) + "&symbol=" + encodeURIComponent(symbol)}
+              className="mt-3 block w-full rounded-xl border border-white/10 px-5 py-4 text-center text-sm font-bold text-zinc-300"
+            >
+              Automate this token →
+            </Link>
+
             {status && <div className="mt-4 rounded-xl border border-white/10 p-4 text-sm text-zinc-400">{status}</div>}
 
             {signature && (
