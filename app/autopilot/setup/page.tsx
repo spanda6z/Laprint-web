@@ -18,7 +18,7 @@ function SetupContent() {
         <div className="mt-10 rounded-2xl border border-white/10 p-6">
           <label className="text-xs text-zinc-500">MARKET</label>
           <div className="mt-3 rounded-xl border border-white/10 p-4">
-            BONK-PERP <span className="float-right text-xs text-zinc-600">VELOCITY</span>
+            SOL-PERP <span className="float-right text-xs text-zinc-600">VELOCITY</span>
           </div>
 
           {tier === "leverage" && (
