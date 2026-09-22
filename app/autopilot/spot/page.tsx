@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Suspense, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import nacl from "tweetnacl";
 import TerminalShell from "@/components/TerminalShell";
 import ConnectWallet from "@/components/ConnectWallet";
 
