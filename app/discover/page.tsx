@@ -7,7 +7,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 type Token = {
   address:string; name:string; symbol:string; image:string|null; priceUsd:string|null;
   liquidityUsd:number; volume1h:number; volume24h:number; change1h:number; change24h:number;
-  buys5m:number; sells5m:number; buys1h:number; sells1h:number; buys24h:number; sells24h:number; marketCap:number|null; promoted:boolean;
+  buys5m:number; sells5m:number; buys1h:number; sells1h:number; buys24h:number; sells24h:number; marketCap:number|null; promoted:boolean; createdAt?:number|null;
 };
 type State = {ok:boolean; updatedAt?:string; tokens?:Token[]; error?:string};
 
@@ -16,10 +16,18 @@ const price=(v:string|null)=>{if(!v)return "—";const n=Number(v);if(!Number.is
 
 export default function Discover() {
   const [state,setState]=useState<State|null>(null);
-  const [filter,setFilter]=useState<"trending"|"moving"|"volume"|"new">("trending");\n  const [query,setQuery]=useState("");
+  const [filter,setFilter]=useState<"trending"|"moving"|"volume"|"new">("trending");
+  const [query,setQuery]=useState("");
   async function load(){try{const r=await fetch("/api/discovery",{cache:"no-store"});setState(await r.json())}catch(e:any){setState({ok:false,error:e?.message||"Discovery unavailable"})}}
   useEffect(()=>{load();const t=setInterval(load,30000);return()=>clearInterval(t)},[]);
-  const tokens=useMemo(()=>{\n    const q=query.trim().toLowerCase();\n    const a=[...(state?.tokens||[])].filter((x)=>!q||x.symbol.toLowerCase().includes(q)||x.name.toLowerCase().includes(q)||x.address.toLowerCase()===q);\n    if(filter==="volume")return a.sort((x,y)=>y.volume24h-x.volume24h);\n    if(filter==="moving")return a.sort((x,y)=>y.change1h-x.change1h);\n    if(filter==="new")return a.sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));\n    return a.sort((x,y)=>(y.buys5m-y.sells5m)-(x.buys5m-x.sells5m));\n  },[state?.tokens,filter,query]);
+  const tokens=useMemo(()=>{
+    const q=query.trim().toLowerCase();
+    const a=[...(state?.tokens||[])].filter((x)=>!q||x.symbol.toLowerCase().includes(q)||x.name.toLowerCase().includes(q)||x.address.toLowerCase()===q);
+    if(filter==="volume")return a.sort((x,y)=>y.volume24h-x.volume24h);
+    if(filter==="moving")return a.sort((x,y)=>y.change1h-x.change1h);
+    if(filter==="new")return a.sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));
+    return a.sort((x,y)=>(y.buys5m-y.sells5m)-(x.buys5m-x.sells5m));
+  },[state?.tokens,filter,query]);
   const moving=tokens.filter(t=>t.change1h>0).length;
   const volume=tokens.reduce((n,t)=>n+t.volume24h,0);
 
@@ -42,7 +50,9 @@ export default function Discover() {
         </div>
       </div>
 
-      <div className="mt-8 flex flex-col gap-3 md:flex-row"><div className="flex-1 rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3"><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search tokens, names or contract addresses…" className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]" /></div>{query&&<button onClick={()=>setQuery("")} className="rounded-2xl border border-[var(--line-strong)] px-4 py-3 text-xs">Clear</button>}</div>\n\n      <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-8 flex flex-col gap-3 md:flex-row"><div className="flex-1 rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3"><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search tokens, names or contract addresses…" className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]" /></div>{query&&<button onClick={()=>setQuery("")} className="rounded-2xl border border-[var(--line-strong)] px-4 py-3 text-xs">Clear</button>}</div>
+
+      <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
         {([["trending","🔥 Trending"],["moving","⚡ Moving"],["volume","💧 Volume"],["new","◌ New"]] as const).map(([v,l])=><button key={v} onClick={()=>setFilter(v)} className={"whitespace-nowrap rounded-full border px-4 py-2 text-xs "+(filter===v?"border-[var(--fg)] bg-[var(--fg)] text-[var(--bg)]":"border-[var(--line-strong)] text-[var(--muted)] hover:bg-[var(--panel)]")}>{l}</button>)}
       </div>
 
