@@ -223,6 +223,27 @@ export default function Autopilot() {
     }
   }
 
+  async function requestExit(position: any) {
+    if (!publicKey || !signMessage) return;
+    setBusyJob("exit:" + position.id);
+    setNotice("");
+    try {
+      const message = "LAPRINT_EXIT_POSITION_V1|" + Date.now() + "|" + publicKey.toBase58() + "|" + position.id;
+      const sig = await signMessage(new TextEncoder().encode(message));
+      const r = await fetch("/api/autopilot/spot-execution", {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ action:"exit", walletAddress:publicKey.toBase58(), positionId:position.id, message, signature:bytesToBase58(sig), maxSlippageBps:100 }),
+      });
+      const d = await r.json();
+      if (!r.ok || !d.ok) throw new Error(d.error || "Exit request failed");
+      setNotice("Exit queued. Review and sign the sell transaction below.");
+      await Promise.all([loadStatus(), loadExecutionJobs()]);
+    } catch (e: any) {
+      setNotice(e?.message || "Exit request failed");
+    } finally {
+      setBusyJob(null);
+    }
+  }
   useEffect(() => {
     if (!publicKey) {
       setData(null);
@@ -380,6 +401,26 @@ export default function Autopilot() {
               )}
             </section>
 
+
+            <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
+              <div className="border-b border-white/10 px-5 py-4 mono text-[10px] text-zinc-600">OPEN POSITIONS</div>
+              {(data?.positions ?? []).filter((p) => p.status === "open").length === 0 ? (
+                <div className="p-10 text-sm text-zinc-600">No open positions.</div>
+              ) : (
+                (data?.positions ?? []).filter((p) => p.status === "open").map((position) => (
+                  <div key={position.id} className="grid gap-3 border-b border-white/5 px-5 py-5 md:grid-cols-[1fr_auto_auto] md:items-center">
+                    <div>
+                      <div className="font-medium">{position.symbol || position.token_address.slice(0, 8) + "…"}</div>
+                      <div className="mono mt-1 text-[9px] text-zinc-600">{position.input_sol} SOL · entry {position.entry_price_sol}</div>
+                    </div>
+                    <div className="mono text-xs">{position.realized_pnl_sol == null ? "OPEN" : position.realized_pnl_sol + " SOL"}</div>
+                    <button onClick={() => requestExit(position)} disabled={busyJob === "exit:" + position.id || !signMessage} className="rounded-lg border border-red-400/40 px-4 py-2 text-[10px] font-bold text-red-300 disabled:opacity-40">
+                      {busyJob === "exit:" + position.id ? "QUEUING…" : "EXIT POSITION"}
+                    </button>
+                  </div>
+                ))
+              )}
+            </section>
             <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
               <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
                 <span className="mono text-[10px] text-zinc-600">
