@@ -31,8 +31,8 @@ function SpotSetupContent() {
   const symbol = q.get("symbol") || "TOKEN";
   const { publicKey, signMessage } = useWallet();
   const [strategy, setStrategy] = useState<"hunter" | "rider">("hunter");
-  const [maxTradeSol, setMaxTradeSol] = useState("0.05");
-  const [slippage, setSlippage] = useState("100");
+  const [maxTradeSol, setMaxTradeSol] = useState("1");
+  const [slippage, setSlippage] = useState("2000");
   const [tp, setTp] = useState("40");
   const [sl, setSl] = useState("20");
   const [trailActivation, setTrailActivation] = useState("30");
