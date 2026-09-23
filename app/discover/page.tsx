@@ -16,10 +16,10 @@ const price=(v:string|null)=>{if(!v)return "—";const n=Number(v);if(!Number.is
 
 export default function Discover() {
   const [state,setState]=useState<State|null>(null);
-  const [filter,setFilter]=useState<"trending"|"moving"|"volume"|"new">("trending");
+  const [filter,setFilter]=useState<"trending"|"moving"|"volume"|"new">("trending");\n  const [query,setQuery]=useState("");
   async function load(){try{const r=await fetch("/api/discovery",{cache:"no-store"});setState(await r.json())}catch(e:any){setState({ok:false,error:e?.message||"Discovery unavailable"})}}
   useEffect(()=>{load();const t=setInterval(load,30000);return()=>clearInterval(t)},[]);
-  const tokens=useMemo(()=>{const a=[...(state?.tokens||[])];if(filter==="volume")return a.sort((x,y)=>y.volume24h-x.volume24h);if(filter==="moving")return a.sort((x,y)=>y.change1h-x.change1h);if(filter==="new")return a.sort((x,y)=>y.buys5m+y.sells5m-x.buys5m-x.sells5m);return a.sort((x,y)=>(y.buys5m-y.sells5m)-(x.buys5m-x.sells5m))},[state?.tokens,filter]);
+  const tokens=useMemo(()=>{\n    const q=query.trim().toLowerCase();\n    const a=[...(state?.tokens||[])].filter((x)=>!q||x.symbol.toLowerCase().includes(q)||x.name.toLowerCase().includes(q)||x.address.toLowerCase()===q);\n    if(filter==="volume")return a.sort((x,y)=>y.volume24h-x.volume24h);\n    if(filter==="moving")return a.sort((x,y)=>y.change1h-x.change1h);\n    if(filter==="new")return a.sort((x,y)=>(y.createdAt||0)-(x.createdAt||0));\n    return a.sort((x,y)=>(y.buys5m-y.sells5m)-(x.buys5m-x.sells5m));\n  },[state?.tokens,filter,query]);
   const moving=tokens.filter(t=>t.change1h>0).length;
   const volume=tokens.reduce((n,t)=>n+t.volume24h,0);
 
@@ -42,7 +42,7 @@ export default function Discover() {
         </div>
       </div>
 
-      <div className="mt-10 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-8 flex flex-col gap-3 md:flex-row"><div className="flex-1 rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3"><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search tokens, names or contract addresses…" className="w-full bg-transparent text-sm outline-none placeholder:text-[var(--muted)]" /></div>{query&&<button onClick={()=>setQuery("")} className="rounded-2xl border border-[var(--line-strong)] px-4 py-3 text-xs">Clear</button>}</div>\n\n      <div className="mt-5 flex gap-2 overflow-x-auto pb-1">
         {([["trending","🔥 Trending"],["moving","⚡ Moving"],["volume","💧 Volume"],["new","◌ New"]] as const).map(([v,l])=><button key={v} onClick={()=>setFilter(v)} className={"whitespace-nowrap rounded-full border px-4 py-2 text-xs "+(filter===v?"border-[var(--fg)] bg-[var(--fg)] text-[var(--bg)]":"border-[var(--line-strong)] text-[var(--muted)] hover:bg-[var(--panel)]")}>{l}</button>)}
       </div>
 
@@ -57,7 +57,7 @@ export default function Discover() {
           <div className="mt-5 flex gap-2 border-t border-[var(--line)] pt-4"><button onClick={()=>{try{const k="velocity-watchlist";const a=JSON.parse(localStorage.getItem(k)||"[]");if(!a.some((x:any)=>x.address===t.address)){a.push(t);localStorage.setItem(k,JSON.stringify(a))}}catch{}}} className="rounded-full border border-[var(--line-strong)] px-4 py-3 text-xs">Watch</button><Link href={"/token?address="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="flex-1 rounded-full bg-[var(--fg)] px-4 py-3 text-center text-xs font-bold text-[var(--bg)]">View token</Link><Link href={"/trade?token="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="rounded-full border border-[var(--line-strong)] px-4 py-3 text-xs">Trade</Link></div>
         </article>})}
       </div>
-      {!state?.error&&tokens.length===0&&<div className="rounded-2xl border border-[var(--line)] p-12 text-center text-sm text-[var(--muted)]">Waiting for live indexed Solana markets.</div>}
+      {!state?.error&&tokens.length===0&&<div className="rounded-2xl border border-[var(--line)] p-12 text-center text-sm text-[var(--muted)]">{query?`No live markets matched “${query}”.`:"Waiting for live indexed Solana markets."}</div>}
       <p className="mt-8 text-[10px] leading-5 text-[var(--muted)]">Market discovery is informational. A token appearing here is not a recommendation or guarantee of performance. Data is supplied by the connected market-data provider.</p>
     </section>
     <nav className="fixed bottom-0 left-0 right-0 z-20 grid grid-cols-4 border-t border-[var(--line)] bg-[var(--bg)]/95 p-2 backdrop-blur md:hidden"><Link href="/discover" className="py-3 text-center text-[10px] font-semibold">🔥 Discover</Link><Link href="/watch" className="py-3 text-center text-[10px] text-[var(--muted)]">◎ Watch</Link><Link href="/autopilot" className="py-3 text-center text-[10px] text-[var(--muted)]">⚡ Auto</Link><Link href="/connect/fund" className="py-3 text-center text-[10px] text-[var(--muted)]">◉ Wallet</Link></nav>
