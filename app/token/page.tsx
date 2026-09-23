@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 type Token={
@@ -16,7 +17,7 @@ const price=(v:string|null)=>{if(!v)return "—";const n=Number(v);if(!Number.is
 
 function metricLabel(value:number){return value>=70?"High":value>=40?"Moderate":"Low"}
 
-export default function TokenPage(){
+function TokenContent(){
   const q=useSearchParams();
   const address=q.get("address");
   const [t,setT]=useState<Token|null>(null);
@@ -121,4 +122,8 @@ export default function TokenPage(){
       </>}
     </section>
   </main>
+}
+
+export default function TokenPage(){
+  return <Suspense fallback={<main className="min-h-screen bg-[var(--bg)] p-8 text-[var(--muted)]">Loading token…</main>}><TokenContent /></Suspense>;
 }
