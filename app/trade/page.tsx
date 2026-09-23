@@ -92,14 +92,18 @@ function TradeContent() {
       setSignature(txSignature);
       setStatus("Transaction submitted. Waiting for Solana confirmation…");
 
-      await connection.confirmTransaction(
-        {
-          signature: txSignature,
-          blockhash: transaction.message.recentBlockhash,
-          lastValidBlockHeight: data.lastValidBlockHeight ?? 0,
-        },
-        "confirmed"
-      );
+      if (typeof data.lastValidBlockHeight === "number" && data.lastValidBlockHeight > 0) {
+        await connection.confirmTransaction(
+          {
+            signature: txSignature,
+            blockhash: transaction.message.recentBlockhash,
+            lastValidBlockHeight: data.lastValidBlockHeight,
+          },
+          "confirmed"
+        );
+      } else {
+        await connection.confirmTransaction(txSignature, "confirmed");
+      }
 
       setStatus("Swap confirmed on Solana.");
     } catch (e: any) {
