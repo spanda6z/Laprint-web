@@ -104,10 +104,10 @@ function TokenContent(){
             <div className="rounded-3xl border border-[var(--line)] p-5">
               <div className="mono text-[9px] text-[var(--muted)]">MARKET SNAPSHOT</div>
               <div className="mt-5 grid grid-cols-2 gap-5">
+                <div><div className="mono text-[8px] text-[var(--muted)]">MARKET CAP</div><div className="mt-1">{unavailable(t.marketCap ?? t.marketCapUsd)?"—":money((t.marketCap ?? t.marketCapUsd) as number)}</div></div>
                 <div><div className="mono text-[8px] text-[var(--muted)]">24H VOLUME</div><div className="mt-1">{money(t.volume24h)}</div></div>
                 <div><div className="mono text-[8px] text-[var(--muted)]">LIQUIDITY</div><div className="mt-1">{money(t.liquidityUsd)}</div></div>
-                <div><div className="mono text-[8px] text-[var(--muted)]">5M BUYS</div><div className="mt-1">{t.buys5m}</div></div>
-                <div><div className="mono text-[8px] text-[var(--muted)]">5M SELLS</div><div className="mt-1">{t.sells5m}</div></div>
+                <div><div className="mono text-[8px] text-[var(--muted)]">1H CHANGE</div><div className="mt-1">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}%</div></div>
               </div>
             </div>
             <div className="rounded-3xl border border-[var(--line)] p-5">
@@ -123,6 +123,19 @@ function TokenContent(){
           <div className="mono text-[9px] text-[var(--muted)]">MARKET DETAILS</div>
           <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-4">
             {[["MARKET CAP",t.marketCap ?? t.marketCapUsd],["FDV",t.fdvUsd],["24H VOLUME",t.volume24h],["LIQUIDITY",t.liquidityUsd]].map(([label,value])=><div key={label as string} className="bg-[var(--bg)] p-4"><div className="mono text-[8px] text-[var(--muted)]">{label}</div><div className="mt-2 text-lg font-semibold">{unavailable(value)?"—":money(value as number)}</div></div>)}
+          </div>
+
+          <div className="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5">
+            <div className="flex items-center justify-between gap-4">
+              <div><div className="mono text-[9px] text-[var(--muted)]">FLOW SUMMARY</div><div className="mt-1 text-sm">Buy and sell activity across the live feed</div></div>
+              <div className="mono text-[9px] text-[var(--muted)]">24H</div>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div><div className="mono text-[8px] text-[var(--muted)]">BUYS</div><div className="mt-1 text-lg font-semibold">{compact(t.buys24h)}</div></div>
+              <div><div className="mono text-[8px] text-[var(--muted)]">SELLS</div><div className="mt-1 text-lg font-semibold">{compact(t.sells24h)}</div></div>
+              <div><div className="mono text-[8px] text-[var(--muted)]">BUY PRESSURE</div><div className="mt-1 text-lg font-semibold">{stats?.buyPressure}%</div></div>
+              <div><div className="mono text-[8px] text-[var(--muted)]">1H TXNS</div><div className="mt-1 text-lg font-semibold">{compact(t.txns1h ?? (t.buys1h+t.sells1h))}</div></div>
+            </div>
           </div>
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
