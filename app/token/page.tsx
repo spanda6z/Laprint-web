@@ -172,6 +172,22 @@ function TokenContent(){
         </section>
 
         <section className="mt-8 rounded-3xl border border-[var(--line)] p-6">
+          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
+            <div><div className="mono text-[9px] text-[var(--muted)]">WHY IT&apos;S MOVING</div><h2 className="mt-2 text-2xl font-semibold tracking-tight">Live signals behind this market</h2></div>
+            <div className="mono text-[9px] text-[var(--muted)]">CURRENT SNAPSHOT</div>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">PRICE</div><div className="mt-2 text-xl font-semibold">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% <span className="text-xs font-normal text-[var(--muted)]">1H</span></div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">Current price movement in the live discovery feed.</p></div>
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">FLOW</div><div className="mt-2 text-xl font-semibold">{stats?.buyPressure}% <span className="text-xs font-normal text-[var(--muted)]">BUY PRESSURE</span></div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">{compact(t.buys5m)} buys vs {compact(t.sells5m)} sells in the latest 5M window.</p></div>
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">VOLUME</div><div className="mt-2 text-xl font-semibold">{money(t.volume24h)}</div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">Reported 24H trading volume from the market-data feed.</p></div>
+          </div>
+          <div className="mt-5 rounded-2xl border border-[var(--line)] p-4">
+            <div className="mono text-[8px] text-[var(--muted)]">SOCIAL SIGNALS</div>
+            <div className="mt-2 flex flex-col justify-between gap-3 md:flex-row md:items-center"><div><div className="text-sm">X / creator activity</div><div className="mt-1 text-[10px] text-[var(--muted)]">No verified social signal is attached to this token in the current feed.</div></div><span className="rounded-full border border-[var(--line-strong)] px-3 py-1 text-[9px] text-[var(--muted)]">NOT AVAILABLE</span></div>
+          </div>
+        </section>
+
+        <section className="mt-8 rounded-3xl border border-[var(--line)] p-6">
           <div className="mono text-[9px] text-[var(--muted)]">ANALYZE · DERIVED FROM CURRENT FEED</div>
           <div className="mt-5 grid gap-4 sm:grid-cols-3">
             {[["Buy pressure",stats?.buyPressure||0,stats?.buyPressure?metricLabel(stats.buyPressure):"No flow"],["1H activity",stats?.activity||0,stats?.activity?String(stats.activity)+" transactions":"No activity"],["Liquidity depth",stats?.liquidity||0,stats?.liquidity?metricLabel(stats.liquidity):"No liquidity"]].map(([label,value,detail])=><div key={label as string} className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="text-sm">{label}</div><div className="mt-3 text-2xl font-semibold">{typeof value==="number"&&label!=="1H activity"?Math.round(value as number)+"%":value}</div><div className="mt-1 text-[10px] text-[var(--muted)]">{detail}</div></div>)}
