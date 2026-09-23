@@ -1,9 +1,9 @@
 export const terminalNav = [
   ["Discover", "/discover"],
-  ["Dashboard", "/dashboard"],
+  ["Watch", "/watch"],
   ["Autopilot", "/autopilot"],
+  ["Trade", "/trade"],
   ["Positions", "/positions"],
-  ["Wallets", "/wallets"],
   ["History", "/history"],
   ["Referral", "/referral"],
   ["Settings", "/settings"],
