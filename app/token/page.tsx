@@ -28,7 +28,9 @@ function TokenContent(){
   const [t,setT]=useState<Token|null>(null);
   const [error,setError]=useState("");
   const [watched,setWatched]=useState(false);
-  const [copied,setCopied]=useState(false);\n  const [social,setSocial]=useState<any[]>([]);\n  const [socialConfigured,setSocialConfigured]=useState(false);
+  const [copied,setCopied]=useState(false);
+  const [social,setSocial]=useState<any[]>([]);
+  const [socialConfigured,setSocialConfigured]=useState(false);
 
   async function load(){
     if(!address)return;
@@ -42,7 +44,10 @@ function TokenContent(){
 
   useEffect(()=>{
     void load();
+    const socialLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/social-signals?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setSocial(Array.isArray(d.signals)?d.signals:[]);setSocialConfigured(Boolean(d.configured));}catch{setSocial([])}};
+    void socialLoad();
     const id=window.setInterval(load,30000);
+    const sid=window.setInterval(socialLoad,60000);
     try{setWatched(JSON.parse(localStorage.getItem("velocity-watchlist")||"[]").some((x:Token)=>x.address===address))}catch{}
     return()=>{window.clearInterval(id);window.clearInterval(sid)};
   },[address]);
@@ -183,7 +188,7 @@ function TokenContent(){
           </div>
           <div className="mt-5 rounded-2xl border border-[var(--line)] p-4">
             <div className="mono text-[8px] text-[var(--muted)]">SOCIAL SIGNALS</div>
-            <div className="mt-2 flex flex-col justify-between gap-3 md:flex-row md:items-center"><div><div className="text-sm">X / creator activity</div><div className="mt-1 text-[10px] text-[var(--muted)]">No verified social signal is attached to this token in the current feed.</div></div><span className="rounded-full border border-[var(--line-strong)] px-3 py-1 text-[9px] text-[var(--muted)]">NOT AVAILABLE</span></div>
+            {!socialConfigured?<div className="mt-3 text-[10px] text-[var(--muted)]">X data is not connected. No creator activity is inferred.</div>:social.length===0?<div className="mt-3 text-[10px] text-[var(--muted)]">No matching public posts were returned by the current X search window.</div>:<div className="mt-3 space-y-3">{social.slice(0,5).map((s:any)=><div key={s.postId} className="rounded-2xl border border-[var(--line)] p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{s.author?`@${s.author.username}`:"Unknown creator"}</span><span className="mono text-[8px] text-[var(--muted)]">MENTION</span></div><p className="mt-2 text-xs leading-5">{s.text}</p><div className="mt-2 flex items-center justify-between text-[9px] text-[var(--muted)]"><span>{s.engagement.toLocaleString()} engagement</span>{s.url&&<a href={s.url} target="_blank" rel="noreferrer" className="underline">View post</a>}</div></div>)}</div>}
           </div>
         </section>
 
