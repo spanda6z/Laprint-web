@@ -43,7 +43,7 @@ export default function Discover() {
       </div>
 
       <div className="mt-10 flex gap-2 overflow-x-auto pb-1">
-        {([["trending","🔥 Trending"],["moving","⚡ Moving"],["volume","💧 Volume"],["new","◌ Active"]] as const).map(([v,l])=><button key={v} onClick={()=>setFilter(v)} className={"whitespace-nowrap rounded-full border px-4 py-2 text-xs "+(filter===v?"border-[var(--fg)] bg-[var(--fg)] text-[var(--bg)]":"border-[var(--line-strong)] text-[var(--muted)] hover:bg-[var(--panel)]")}>{l}</button>)}
+        {([["trending","🔥 Trending"],["moving","⚡ Moving"],["volume","💧 Volume"],["new","◌ New"]] as const).map(([v,l])=><button key={v} onClick={()=>setFilter(v)} className={"whitespace-nowrap rounded-full border px-4 py-2 text-xs "+(filter===v?"border-[var(--fg)] bg-[var(--fg)] text-[var(--bg)]":"border-[var(--line-strong)] text-[var(--muted)] hover:bg-[var(--panel)]")}>{l}</button>)}
       </div>
 
       {state?.error&&<div className="mt-5 rounded-2xl border border-[var(--line)] p-5 text-sm text-[var(--muted)]">{state.error}</div>}
