@@ -1,48 +1,494 @@
 "use client";
+
 import TerminalShell from "@/components/TerminalShell";
 import Link from "next/link";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { VersionedTransaction } from "@solana/web3.js";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 
-type Data={ok:boolean;strategies:any[];positions:any[];events:any[];error?:string};
+type Data = {
+  ok: boolean;
+  strategies: any[];
+  positions: any[];
+  events: any[];
+  error?: string;
+};
 
-export default function Autopilot(){
- const {publicKey,signMessage,signTransaction}=useWallet(); const [data,setData]=useState<Data|null>(null); const [stopping,setStopping]=useState(false); const [notice,setNotice]=useState("");
- const base58=(bytes:Uint8Array)=>{const alphabet="123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";let digits=[0];for(const byte of bytes){let carry=byte;for(let i=0;i<digits.length;i++){const v=digits[i]*256+carry;digits[i]=v%58;carry=Math.floor(v/58)}while(carry){digits.push(carry%58);carry=Math.floor(carry/58)}}for(const byte of bytes){if(byte===0)digits.push(0);else break}return digits.reverse().map(x=>alphabet[x]).join("")};
- const emergencyStop=async()=>{if(!publicKey||!signMessage)return;setStopping(true);setNotice("");try{const message="LAPRINT_EMERGENCY_STOP_V1|"+Date.now()+"|"+publicKey.toBase58();const sig=await signMessage(new TextEncoder().encode(message));const r=await fetch("/api/autopilot/emergency-stop",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({walletAddress:publicKey.toBase58(),message,signature:base58(sig)})});const d=await r.json();setNotice(d.message||d.error||"Emergency stop complete");if(d.ok){const rr=await fetch("/api/autopilot/spot-status?wallet="+encodeURIComponent(publicKey.toBase58()),{cache:"no-store"});setData(await rr.json())}}catch(e:any){setNotice(e?.message||"Emergency stop failed")}finally{setStopping(false)}};
- useEffect(()=>{if(!publicKey){setData(null);return;}let dead=false;
-  const load=async()=>{try{const r=await fetch("/api/autopilot/spot-status?wallet="+encodeURIComponent(publicKey.toBase58()),{cache:"no-store"});const d=await r.json();if(!dead)setData(d)}catch(e:any){if(!dead)setData({ok:false,strategies:[],positions:[],events:[],error:e?.message})}};
-  load();loadExecutionJobs();const t=setInterval(()=>{load();loadExecutionJobs()},10000);return()=>{dead=true;clearInterval(t)};
- },[publicKey]);
- return <TerminalShell><div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-  <div className="mono text-[10px] text-zinc-600">AUTOPILOT / SPOT</div>
-  <div className="mt-4 flex items-end justify-between gap-4"><div><h1 className="text-4xl font-semibold">Autopilot</h1><p className="mt-2 text-sm text-zinc-500">Signal evaluation, risk gates and execution readiness.</p></div><div className="flex gap-4"><button onClick={emergencyStop} disabled={stopping||!signMessage} className="mono text-[10px] text-red-400 underline disabled:opacity-40">{stopping?"STOPPING…":"EMERGENCY STOP"}</button><Link href="/discover" className="mono text-[10px] underline">DISCOVER →</Link></div></div>
-  {!publicKey?<div className="mt-8 rounded-2xl border border-white/10 p-12 text-center text-sm text-zinc-500">Connect your wallet to view strategies.</div>:
-  <><div className="mt-8 grid gap-4 md:grid-cols-4">
-   {[["STRATEGIES",data?.strategies?.length??0],["OPEN POSITIONS",data?.positions?.filter(x=>x.status==="open").length??0],["EVENTS",data?.events?.length??0],["EXECUTION","LOCKED"]].map(([k,v])=><div key={String(k)} className="rounded-2xl border border-white/10 p-5"><div className="mono text-[10px] text-zinc-600">{k}</div><div className="mt-3 text-2xl">{v}</div></div>)}
-  </div>
-  {notice&&<div className="mt-4 rounded-xl border border-white/10 px-4 py-3 text-xs text-zinc-500">{notice}</div>}
-  <section className="mt-8 rounded-2xl border border-white/10 overflow-hidden"><div className="border-b border-white/10 px-5 py-4 mono text-[10px] text-zinc-600">ACTIVE STRATEGIES</div>
-   {(data?.strategies??[]).length===0?<div className="p-10 text-sm text-zinc-600">No strategies yet. Open a token from Discover and configure Automate.</div>:
-   data!.strategies.map(s=><div key={s.id} className="grid gap-2 border-b border-white/5 px-5 py-5 md:grid-cols-6"><div><div className="font-medium">{s.symbol||s.token_address.slice(0,8)+"…"}</div><div className="mono text-[10px] text-zinc-600">{s.strategy.toUpperCase()}</div></div><div><div className="mono text-[9px] text-zinc-600">MAX</div><div className="mono text-xs">{s.max_trade_sol} SOL</div></div><div><div className="mono text-[9px] text-zinc-600">TP / SL</div><div className="mono text-xs">+{s.take_profit_pct}% / -{s.stop_loss_pct}%</div></div><div><div className="mono text-[9px] text-zinc-600">TRAIL</div><div className="mono text-xs">{s.trailing_activation_pct?("+"+s.trailing_activation_pct+"% / "+s.trailing_pullback_pct+"%"):"OFF"}</div></div><div><div className="mono text-[9px] text-zinc-600">STATUS</div><div className="mono text-xs">{s.active?"ACTIVE":"PAUSED"} · {s.automation_enabled?"ARMED":"LOCKED"}</div></div><div className="text-right"><Link href={"/autopilot/spot?token="+encodeURIComponent(s.token_address)+"&symbol="+encodeURIComponent(s.symbol||"")} className="mono text-[10px] underline">EDIT</Link></div></div>)}
-  </section>
-  <section className="mt-8 rounded-2xl border border-white/10 overflow-hidden">
-   <div className="border-b border-white/10 px-5 py-4 flex items-center justify-between">
-    <span className="mono text-[10px] text-zinc-600">EXECUTION QUEUE</span>
-    <span className="mono text-[10px] text-zinc-600">{executionJobs.filter(j=>j.status==="awaiting_signature").length} AWAITING</span>
-   </div>
-   {executionJobs.length===0?<div className="p-10 text-sm text-zinc-600">No execution intents waiting.</div>:
-    executionJobs.slice(0,10).map(j=><div key={j.id} className="grid gap-3 border-b border-white/5 px-5 py-5 md:grid-cols-[1fr_auto_auto] md:items-center">
-      <div><div className="font-medium">{j.side.toUpperCase()} {j.token_address.slice(0,8)}…</div><div className="mono mt-1 text-[9px] text-zinc-600">{j.status.toUpperCase()} · {j.amount_sol} SOL</div>{j.failure_reason&&<div className="mt-1 text-[10px] text-red-400">{j.failure_reason}</div>}</div>
-      <div className="mono text-[9px] text-zinc-600">{j.max_slippage_bps} BPS</div>
-      {j.status==="awaiting_signature"?<button onClick={()=>authorizeExecution(j)} disabled={!signTransaction} className="rounded-lg bg-white px-4 py-2 text-[10px] font-bold text-black disabled:opacity-40">REVIEW & SIGN</button>:<span className="mono text-[9px] text-zinc-600">{j.tx_signature?j.tx_signature.slice(0,10)+"…":"—"}</span>}
-    </div>)}
-  </section>
+type ExecutionJob = {
+  id: string;
+  token_address: string;
+  side: "buy" | "sell";
+  amount_sol: number | string;
+  max_slippage_bps: number;
+  status: string;
+  unsigned_transaction?: string | null;
+  tx_signature?: string | null;
+  failure_reason?: string | null;
+};
 
-  <section className="mt-8 rounded-2xl border border-white/10 overflow-hidden"><div className="border-b border-white/10 px-5 py-4 mono text-[10px] text-zinc-600">AUTOMATION LOG</div>
-   {(data?.events??[]).length===0?<div className="p-10 text-sm text-zinc-600">No evaluation events yet.</div>:data!.events.slice(0,30).map(e=><div key={e.id} className="grid gap-2 border-b border-white/5 px-5 py-4 md:grid-cols-4"><span className="mono text-[10px] text-zinc-500">{new Date(e.created_at).toLocaleTimeString()}</span><span className="mono text-[10px]">{e.event_type}</span><span className="mono text-[10px] text-zinc-500">{e.token_address?e.token_address.slice(0,10)+"…":"—"}</span><span className="truncate text-xs text-zinc-500">{typeof e.payload==="string"?e.payload:JSON.stringify(e.payload)}</span></div>)}
-  </section></>}
-  {data?.error&&<p className="mt-4 text-xs text-zinc-600">{data.error}</p>}
- </div></TerminalShell>
+function bytesToBase58(bytes: Uint8Array) {
+  const alphabet = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+  let digits = [0];
+  for (const byte of bytes) {
+    let carry = byte;
+    for (let i = 0; i < digits.length; i++) {
+      const value = digits[i] * 256 + carry;
+      digits[i] = value % 58;
+      carry = Math.floor(value / 58);
+    }
+    while (carry) {
+      digits.push(carry % 58);
+      carry = Math.floor(carry / 58);
+    }
+  }
+  for (const byte of bytes) {
+    if (byte === 0) digits.push(0);
+    else break;
+  }
+  return digits.reverse().map((x) => alphabet[x]).join("");
+}
+
+function base64ToBytes(value: string) {
+  const binary = atob(value);
+  return Uint8Array.from(binary, (char) => char.charCodeAt(0));
+}
+
+function bytesToBase64(bytes: Uint8Array) {
+  let binary = "";
+  const chunk = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunk) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunk));
+  }
+  return btoa(binary);
+}
+
+export default function Autopilot() {
+  const { publicKey, signMessage, signTransaction } = useWallet();
+  const [data, setData] = useState<Data | null>(null);
+  const [executionJobs, setExecutionJobs] = useState<ExecutionJob[]>([]);
+  const [stopping, setStopping] = useState(false);
+  const [busyJob, setBusyJob] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
+
+  async function loadExecutionJobs() {
+    if (!publicKey) {
+      setExecutionJobs([]);
+      return;
+    }
+    try {
+      const r = await fetch(
+        "/api/autopilot/spot-execution?wallet=" +
+          encodeURIComponent(publicKey.toBase58()),
+        { cache: "no-store" },
+      );
+      const d = await r.json();
+      if (d.ok) setExecutionJobs(d.jobs ?? []);
+    } catch {
+      // The main status panel remains usable if queue polling temporarily fails.
+    }
+  }
+
+  async function loadStatus() {
+    if (!publicKey) {
+      setData(null);
+      return;
+    }
+    try {
+      const r = await fetch(
+        "/api/autopilot/spot-status?wallet=" +
+          encodeURIComponent(publicKey.toBase58()),
+        { cache: "no-store" },
+      );
+      setData(await r.json());
+    } catch (e: any) {
+      setData({
+        ok: false,
+        strategies: [],
+        positions: [],
+        events: [],
+        error: e?.message || "Status unavailable",
+      });
+    }
+  }
+
+  async function emergencyStop() {
+    if (!publicKey || !signMessage) return;
+    setStopping(true);
+    setNotice("");
+    try {
+      const message =
+        "LAPRINT_EMERGENCY_STOP_V1|" +
+        Date.now() +
+        "|" +
+        publicKey.toBase58();
+      const sig = await signMessage(new TextEncoder().encode(message));
+      const r = await fetch("/api/autopilot/emergency-stop", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          walletAddress: publicKey.toBase58(),
+          message,
+          signature: bytesToBase58(sig),
+        }),
+      });
+      const d = await r.json();
+      setNotice(d.message || d.error || "Emergency stop complete");
+      await Promise.all([loadStatus(), loadExecutionJobs()]);
+    } catch (e: any) {
+      setNotice(e?.message || "Emergency stop failed");
+    } finally {
+      setStopping(false);
+    }
+  }
+
+  async function authorizeExecution(job: ExecutionJob) {
+    if (!publicKey || !signTransaction || !job.unsigned_transaction) return;
+
+    setBusyJob(job.id);
+    setNotice("");
+
+    try {
+      const tx = VersionedTransaction.deserialize(
+        base64ToBytes(job.unsigned_transaction),
+      );
+
+      const feePayer = tx.message.staticAccountKeys[0]?.toBase58();
+      if (feePayer !== publicKey.toBase58()) {
+        throw new Error("Transaction fee payer does not match this wallet.");
+      }
+
+      setNotice("Transaction is ready. Waiting for wallet approval…");
+      const signed = await signTransaction(tx);
+
+      const submit = await fetch("/api/autopilot/spot-execution", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          action: "submit",
+          walletAddress: publicKey.toBase58(),
+          jobId: job.id,
+          signedTransaction: bytesToBase64(signed.serialize()),
+        }),
+      });
+
+      const submitted = await submit.json();
+      if (!submit.ok || !submitted.ok) {
+        throw new Error(submitted.error || "Transaction submission failed.");
+      }
+
+      setNotice("Transaction submitted. Waiting for confirmation…");
+
+      for (let attempt = 0; attempt < 12; attempt++) {
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+
+        const confirm = await fetch("/api/autopilot/spot-execution", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            action: "confirm",
+            walletAddress: publicKey.toBase58(),
+            jobId: job.id,
+          }),
+        });
+
+        const confirmed = await confirm.json();
+        if (!confirm.ok || !confirmed.ok) {
+          throw new Error(confirmed.error || "Confirmation check failed.");
+        }
+
+        if (confirmed.status === "confirmed") {
+          setNotice(
+            confirmed.positionId
+              ? "Confirmed. Position is now open."
+              : "Confirmed on Solana.",
+          );
+          await Promise.all([loadStatus(), loadExecutionJobs()]);
+          return;
+        }
+
+        if (confirmed.status === "failed") {
+          throw new Error(confirmed.error || "Solana transaction failed.");
+        }
+      }
+
+      setNotice(
+        "Transaction was submitted but confirmation is still pending. The queue will continue showing its status.",
+      );
+      await loadExecutionJobs();
+    } catch (e: any) {
+      setNotice(e?.message || "Execution was rejected or failed.");
+      await loadExecutionJobs();
+    } finally {
+      setBusyJob(null);
+    }
+  }
+
+  useEffect(() => {
+    if (!publicKey) {
+      setData(null);
+      setExecutionJobs([]);
+      return;
+    }
+
+    let dead = false;
+
+    const load = async () => {
+      if (dead) return;
+      await Promise.all([loadStatus(), loadExecutionJobs()]);
+    };
+
+    load();
+    const timer = setInterval(load, 10000);
+
+    return () => {
+      dead = true;
+      clearInterval(timer);
+    };
+  }, [publicKey]);
+
+  return (
+    <TerminalShell>
+      <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
+        <div className="mono text-[10px] text-zinc-600">AUTOPILOT / SPOT</div>
+
+        <div className="mt-4 flex items-end justify-between gap-4">
+          <div>
+            <h1 className="text-4xl font-semibold">Autopilot</h1>
+            <p className="mt-2 text-sm text-zinc-500">
+              Signal evaluation, risk gates and execution readiness.
+            </p>
+          </div>
+
+          <div className="flex gap-4">
+            <button
+              onClick={emergencyStop}
+              disabled={stopping || !signMessage}
+              className="mono text-[10px] text-red-400 underline disabled:opacity-40"
+            >
+              {stopping ? "STOPPING…" : "EMERGENCY STOP"}
+            </button>
+            <Link href="/discover" className="mono text-[10px] underline">
+              DISCOVER →
+            </Link>
+          </div>
+        </div>
+
+        {!publicKey ? (
+          <div className="mt-8 rounded-2xl border border-white/10 p-12 text-center text-sm text-zinc-500">
+            Connect your wallet to view strategies.
+          </div>
+        ) : (
+          <>
+            <div className="mt-8 grid gap-4 md:grid-cols-4">
+              {[
+                ["STRATEGIES", data?.strategies?.length ?? 0],
+                [
+                  "OPEN POSITIONS",
+                  data?.positions?.filter((x) => x.status === "open").length ?? 0,
+                ],
+                ["EVENTS", data?.events?.length ?? 0],
+                [
+                  "AWAITING",
+                  executionJobs.filter((j) => j.status === "awaiting_signature")
+                    .length,
+                ],
+              ].map(([key, value]) => (
+                <div
+                  key={String(key)}
+                  className="rounded-2xl border border-white/10 p-5"
+                >
+                  <div className="mono text-[10px] text-zinc-600">{key}</div>
+                  <div className="mt-3 text-2xl">{value}</div>
+                </div>
+              ))}
+            </div>
+
+            {notice && (
+              <div className="mt-4 rounded-xl border border-white/10 px-4 py-3 text-xs text-zinc-500">
+                {notice}
+              </div>
+            )}
+
+            <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
+              <div className="border-b border-white/10 px-5 py-4 mono text-[10px] text-zinc-600">
+                ACTIVE STRATEGIES
+              </div>
+
+              {(data?.strategies ?? []).length === 0 ? (
+                <div className="p-10 text-sm text-zinc-600">
+                  No strategies yet. Open a token from Discover and configure
+                  Automate.
+                </div>
+              ) : (
+                data!.strategies.map((s) => (
+                  <div
+                    key={s.id}
+                    className="grid gap-2 border-b border-white/5 px-5 py-5 md:grid-cols-6"
+                  >
+                    <div>
+                      <div className="font-medium">
+                        {s.symbol || s.token_address.slice(0, 8) + "…"}
+                      </div>
+                      <div className="mono text-[10px] text-zinc-600">
+                        {s.strategy.toUpperCase()}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mono text-[9px] text-zinc-600">MAX</div>
+                      <div className="mono text-xs">{s.max_trade_sol} SOL</div>
+                    </div>
+                    <div>
+                      <div className="mono text-[9px] text-zinc-600">TP / SL</div>
+                      <div className="mono text-xs">
+                        +{s.take_profit_pct}% / -{s.stop_loss_pct}%
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mono text-[9px] text-zinc-600">TRAIL</div>
+                      <div className="mono text-xs">
+                        {s.trailing_activation_pct
+                          ? "+" +
+                            s.trailing_activation_pct +
+                            "% / " +
+                            s.trailing_pullback_pct +
+                            "%"
+                          : "OFF"}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mono text-[9px] text-zinc-600">STATUS</div>
+                      <div className="mono text-xs">
+                        {s.active ? "ACTIVE" : "PAUSED"} ·{" "}
+                        {s.automation_enabled ? "ARMED" : "LOCKED"}
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <Link
+                        href={
+                          "/autopilot/spot?token=" +
+                          encodeURIComponent(s.token_address) +
+                          "&symbol=" +
+                          encodeURIComponent(s.symbol || "")
+                        }
+                        className="mono text-[10px] underline"
+                      >
+                        EDIT
+                      </Link>
+                    </div>
+                  </div>
+                ))
+              )}
+            </section>
+
+            <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
+              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+                <span className="mono text-[10px] text-zinc-600">
+                  EXECUTION QUEUE
+                </span>
+                <span className="mono text-[10px] text-zinc-600">
+                  {
+                    executionJobs.filter(
+                      (j) => j.status === "awaiting_signature",
+                    ).length
+                  }{" "}
+                  AWAITING
+                </span>
+              </div>
+
+              {executionJobs.length === 0 ? (
+                <div className="p-10 text-sm text-zinc-600">
+                  No execution intents waiting.
+                </div>
+              ) : (
+                executionJobs.slice(0, 10).map((job) => (
+                  <div
+                    key={job.id}
+                    className="grid gap-3 border-b border-white/5 px-5 py-5 md:grid-cols-[1fr_auto_auto] md:items-center"
+                  >
+                    <div>
+                      <div className="font-medium">
+                        {job.side.toUpperCase()} {job.token_address.slice(0, 8)}…
+                      </div>
+                      <div className="mono mt-1 text-[9px] text-zinc-600">
+                        {job.status.toUpperCase()} · {job.amount_sol} SOL
+                      </div>
+                      {job.failure_reason && (
+                        <div className="mt-1 text-[10px] text-red-400">
+                          {job.failure_reason}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="mono text-[9px] text-zinc-600">
+                      {job.max_slippage_bps} BPS
+                    </div>
+
+                    {job.status === "awaiting_signature" ? (
+                      <button
+                        onClick={() => authorizeExecution(job)}
+                        disabled={
+                          busyJob === job.id ||
+                          !signTransaction ||
+                          !job.unsigned_transaction
+                        }
+                        className="rounded-lg bg-white px-4 py-2 text-[10px] font-bold text-black disabled:opacity-40"
+                      >
+                        {busyJob === job.id ? "PROCESSING…" : "REVIEW & SIGN"}
+                      </button>
+                    ) : (
+                      <span className="mono text-[9px] text-zinc-600">
+                        {job.tx_signature
+                          ? job.tx_signature.slice(0, 10) + "…"
+                          : "—"}
+                      </span>
+                    )}
+                  </div>
+                ))
+              )}
+            </section>
+
+            <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
+              <div className="border-b border-white/10 px-5 py-4 mono text-[10px] text-zinc-600">
+                AUTOMATION LOG
+              </div>
+
+              {(data?.events ?? []).length === 0 ? (
+                <div className="p-10 text-sm text-zinc-600">
+                  No evaluation events yet.
+                </div>
+              ) : (
+                data!.events.slice(0, 30).map((event) => (
+                  <div
+                    key={event.id}
+                    className="grid gap-2 border-b border-white/5 px-5 py-4 md:grid-cols-4"
+                  >
+                    <span className="mono text-[10px] text-zinc-500">
+                      {new Date(event.created_at).toLocaleTimeString()}
+                    </span>
+                    <span className="mono text-[10px]">
+                      {event.event_type}
+                    </span>
+                    <span className="mono text-[10px] text-zinc-500">
+                      {event.token_address
+                        ? event.token_address.slice(0, 10) + "…"
+                        : "—"}
+                    </span>
+                    <span className="truncate text-xs text-zinc-500">
+                      {typeof event.payload === "string"
+                        ? event.payload
+                        : JSON.stringify(event.payload)}
+                    </span>
+                  </div>
+                ))
+              )}
+            </section>
+          </>
+        )}
+
+        {data?.error && (
+          <p className="mt-4 text-xs text-zinc-600">{data.error}</p>
+        )}
+      </div>
+    </TerminalShell>
+  );
 }
