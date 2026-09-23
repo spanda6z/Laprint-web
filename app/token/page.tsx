@@ -11,7 +11,7 @@ type Token={
   buys5m:number; sells5m:number; buys1h:number; sells1h:number; buys24h?:number; sells24h?:number; marketCap?:number|null;
   marketCapUsd?:number|null; fdvUsd?:number|null; holders?:number|null;
   txns5m?:number|null; txns1h?:number|null;
-  mintAuthority?:string|null; freezeAuthority?:string|null; lpStatus?:string|null;
+  mintAuthority?:string|null; freezeAuthority?:string|null; lpStatus?:string|null; createdAt?:number|null;
 };
 
 const money=(n:number)=>n>=1e6?"$"+(n/1e6).toFixed(1)+"M":n>=1e3?"$"+(n/1e3).toFixed(1)+"K":"$"+n.toFixed(0);
@@ -31,6 +31,7 @@ function TokenContent(){
   const [copied,setCopied]=useState(false);
   const [social,setSocial]=useState<any[]>([]);
   const [socialConfigured,setSocialConfigured]=useState(false);
+  const [events,setEvents]=useState<any[]>([]);
 
   async function load(){
     if(!address)return;
@@ -45,11 +46,14 @@ function TokenContent(){
   useEffect(()=>{
     void load();
     const socialLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/social-signals?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setSocial(Array.isArray(d.signals)?d.signals:[]);setSocialConfigured(Boolean(d.configured));}catch{setSocial([])}};
+    const eventsLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/token-events?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setEvents(Array.isArray(d.events)?d.events:[]);}catch{setEvents([])}};
     void socialLoad();
+    void eventsLoad();
     const id=window.setInterval(load,30000);
     const sid=window.setInterval(socialLoad,60000);
+    const eid=window.setInterval(eventsLoad,60000);
     try{setWatched(JSON.parse(localStorage.getItem("velocity-watchlist")||"[]").some((x:Token)=>x.address===address))}catch{}
-    return()=>{window.clearInterval(id);window.clearInterval(sid)};
+    return()=>{window.clearInterval(id);window.clearInterval(sid);window.clearInterval(eid)};
   },[address]);
 
   function toggleWatch(){
@@ -186,6 +190,21 @@ function TokenContent(){
             <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">FLOW</div><div className="mt-2 text-xl font-semibold">{stats?.buyPressure}% <span className="text-xs font-normal text-[var(--muted)]">BUY PRESSURE</span></div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">{compact(t.buys5m)} buys vs {compact(t.sells5m)} sells in the latest 5M window.</p></div>
             <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">VOLUME</div><div className="mt-2 text-xl font-semibold">{money(t.volume24h)}</div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">Reported 24H trading volume from the market-data feed.</p></div>
           </div>
+          <div className="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5">
+            <div className="flex items-center justify-between gap-3">
+              <div><div className="mono text-[8px] text-[var(--muted)]">EVENT TIMELINE</div><div className="mt-1 text-sm">Timestamped evidence, not inferred causality</div></div>
+              <div className="mono text-[8px] text-[var(--muted)]">LIVE</div>
+            </div>
+            {events.length===0?<div className="mt-4 text-[10px] leading-5 text-[var(--muted)]">No timestamped events are available yet. The timeline never invents market history.</div>:<div className="mt-5 space-y-3">{events.map((event:any)=><div key={event.id} className="flex gap-3 rounded-2xl border border-[var(--line)] p-3">
+              <div className="mt-1 h-2 w-2 shrink-0 rounded-full bg-[var(--fg)]"/>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-2"><div className="text-xs font-semibold">{event.label}</div><div className="mono text-[8px] text-[var(--muted)]">{event.timestampLabel}</div></div>
+                <div className="mt-1 text-[10px] leading-5 text-[var(--muted)]">{event.description}</div>
+                <div className="mt-2 flex flex-wrap gap-2"><span className="mono rounded-full border border-[var(--line)] px-2 py-1 text-[7px] text-[var(--muted)]">{event.source}</span>{event.link&&<a href={event.link} target="_blank" rel="noreferrer" className="mono rounded-full border border-[var(--line-strong)] px-2 py-1 text-[7px] underline">VIEW EVIDENCE</a>}</div>
+              </div>
+            </div>)}</div>}
+          </div>
+
           <div className="mt-5 rounded-2xl border border-[var(--line)] p-4">
             <div className="mono text-[8px] text-[var(--muted)]">SOCIAL SIGNALS</div>
             {!socialConfigured?<div className="mt-3 text-[10px] text-[var(--muted)]">X data is not connected. No creator activity is inferred.</div>:social.length===0?<div className="mt-3 text-[10px] text-[var(--muted)]">No matching public posts were returned by the current X search window.</div>:<div className="mt-3 space-y-3">{social.slice(0,5).map((s:any)=><div key={s.postId} className="rounded-2xl border border-[var(--line)] p-3"><div className="flex items-center justify-between gap-3"><span className="text-xs font-semibold">{s.author?`@${s.author.username}`:"Unknown creator"}</span><span className="mono text-[8px] text-[var(--muted)]">MENTION</span></div><p className="mt-2 text-xs leading-5">{s.text}</p><div className="mt-2 flex items-center justify-between text-[9px] text-[var(--muted)]"><span>{s.engagement.toLocaleString()} engagement</span>{s.url&&<a href={s.url} target="_blank" rel="noreferrer" className="underline">View post</a>}</div></div>)}</div>}
