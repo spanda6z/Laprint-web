@@ -8,7 +8,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 type Token={
   address:string; name:string; symbol:string; image:string|null; priceUsd:string|null;
   liquidityUsd:number; volume1h:number; volume24h:number; change1h:number; change24h:number;
-  buys5m:number; sells5m:number; buys1h:number; sells1h:number;
+  buys5m:number; sells5m:number; buys1h:number; sells1h:number; buys24h?:number; sells24h?:number; marketCap?:number|null;
   marketCapUsd?:number|null; fdvUsd?:number|null; holders?:number|null;
   txns5m?:number|null; txns1h?:number|null;
   mintAuthority?:string|null; freezeAuthority?:string|null; lpStatus?:string|null;
@@ -122,7 +122,7 @@ function TokenContent(){
         <section className="mt-8 rounded-3xl border border-[var(--line)] p-6">
           <div className="mono text-[9px] text-[var(--muted)]">MARKET DETAILS</div>
           <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-4">
-            {[["MARKET CAP",t.marketCapUsd],["FDV",t.fdvUsd],["24H VOLUME",t.volume24h],["LIQUIDITY",t.liquidityUsd]].map(([label,value])=><div key={label as string} className="bg-[var(--bg)] p-4"><div className="mono text-[8px] text-[var(--muted)]">{label}</div><div className="mt-2 text-lg font-semibold">{unavailable(value)?"—":money(value as number)}</div></div>)}
+            {[["MARKET CAP",t.marketCap ?? t.marketCapUsd],["FDV",t.fdvUsd],["24H VOLUME",t.volume24h],["LIQUIDITY",t.liquidityUsd]].map(([label,value])=><div key={label as string} className="bg-[var(--bg)] p-4"><div className="mono text-[8px] text-[var(--muted)]">{label}</div><div className="mt-2 text-lg font-semibold">{unavailable(value)?"—":money(value as number)}</div></div>)}
           </div>
 
           <div className="mt-6 grid gap-6 md:grid-cols-2">
