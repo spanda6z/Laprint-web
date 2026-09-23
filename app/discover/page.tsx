@@ -7,7 +7,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 type Token = {
   address:string; name:string; symbol:string; image:string|null; priceUsd:string|null;
   liquidityUsd:number; volume1h:number; volume24h:number; change1h:number; change24h:number;
-  buys5m:number; sells5m:number; buys1h:number; sells1h:number; promoted:boolean;
+  buys5m:number; sells5m:number; buys1h:number; sells1h:number; buys24h:number; sells24h:number; marketCap:number|null; promoted:boolean;
 };
 type State = {ok:boolean; updatedAt?:string; tokens?:Token[]; error?:string};
 
@@ -53,7 +53,7 @@ export default function Discover() {
           <div className="flex items-start justify-between gap-4"><div className="flex items-center gap-3">{t.image?<img src={t.image} alt="" className="h-10 w-10 rounded-full object-cover"/>:<div className="h-10 w-10 rounded-full border border-[var(--line)]"/>}<div><div className="font-semibold">{t.symbol}</div><div className="max-w-[150px] truncate text-[10px] text-[var(--muted)]">{t.name}</div></div></div><div className={"mono text-xs "+(t.change1h>=0?"":"text-[var(--muted)]")}>{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}%</div></div>
           <div className="mt-7 flex items-end justify-between"><div className="text-2xl font-semibold tracking-tight">{price(t.priceUsd)}</div><div className="mono text-[9px] text-[var(--muted)]">1H</div></div>
           <div className="mt-5"><div className="flex justify-between text-[9px] text-[var(--muted)]"><span>BUY FLOW</span><span>{buy}%</span></div><div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[var(--line)]"><div className="h-full bg-[var(--fg)]" style={{width:buy+"%"}}/></div></div>
-          <div className="mt-5 grid grid-cols-2 gap-3 border-t border-[var(--line)] pt-4"><div><div className="mono text-[8px] text-[var(--muted)]">VOLUME</div><div className="mt-1 text-sm">{money(t.volume24h)}</div></div><div><div className="mono text-[8px] text-[var(--muted)]">LIQUIDITY</div><div className="mt-1 text-sm">{money(t.liquidityUsd)}</div></div></div>
+          <div className="mt-5 grid grid-cols-3 gap-3 border-t border-[var(--line)] pt-4"><div><div className="mono text-[8px] text-[var(--muted)]">MCAP</div><div className="mt-1 text-sm">{t.marketCap == null ? "—" : money(t.marketCap)}</div></div><div><div className="mono text-[8px] text-[var(--muted)]">VOL 24H</div><div className="mt-1 text-sm">{money(t.volume24h)}</div></div><div><div className="mono text-[8px] text-[var(--muted)]">LIQUIDITY</div><div className="mt-1 text-sm">{money(t.liquidityUsd)}</div></div></div><div className="mt-3 flex items-center justify-between text-[9px] text-[var(--muted)]"><span>24H TXNS {t.buys24h+t.sells24h}</span><span>BUYS {t.buys24h} · SELLS {t.sells24h}</span></div>
           <div className="mt-5 flex gap-2"><button onClick={()=>{try{const k="velocity-watchlist";const a=JSON.parse(localStorage.getItem(k)||"[]");if(!a.some((x:any)=>x.address===t.address)){a.push(t);localStorage.setItem(k,JSON.stringify(a))}}catch{}}} className="rounded-full border border-[var(--line-strong)] px-4 py-3 text-xs">Watch</button><Link href={"/token?address="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="flex-1 rounded-full bg-[var(--fg)] px-4 py-3 text-center text-xs font-bold text-[var(--bg)]">View token</Link><Link href={"/trade?token="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="rounded-full border border-[var(--line-strong)] px-4 py-3 text-xs">Trade</Link></div>
         </article>})}
       </div>
