@@ -28,7 +28,7 @@ function TokenContent(){
   const [t,setT]=useState<Token|null>(null);
   const [error,setError]=useState("");
   const [watched,setWatched]=useState(false);
-  const [copied,setCopied]=useState(false);
+  const [copied,setCopied]=useState(false);\n  const [social,setSocial]=useState<any[]>([]);\n  const [socialConfigured,setSocialConfigured]=useState(false);
 
   async function load(){
     if(!address)return;
@@ -44,7 +44,7 @@ function TokenContent(){
     void load();
     const id=window.setInterval(load,30000);
     try{setWatched(JSON.parse(localStorage.getItem("velocity-watchlist")||"[]").some((x:Token)=>x.address===address))}catch{}
-    return()=>window.clearInterval(id);
+    return()=>{window.clearInterval(id);window.clearInterval(sid)};
   },[address]);
 
   function toggleWatch(){
