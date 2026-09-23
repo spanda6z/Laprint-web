@@ -7,10 +7,35 @@ import ThemeToggle from "@/components/ThemeToggle";
 type Item={address:string;symbol:string;name:string;priceUsd:string|null;change1h:number;liquidityUsd:number;volume24h:number;image:string|null};
 const money=(n:number)=>n>=1e6?"$"+(n/1e6).toFixed(1)+"M":n>=1e3?"$"+(n/1e3).toFixed(1)+"K":"$"+n.toFixed(0);
 
-export default function Watch(){const [items,setItems]=useState<Item[]>([]);
-useEffect(()=>{try{setItems(JSON.parse(localStorage.getItem("velocity-watchlist")||"[]"))}catch{}},[]);
-function remove(address:string){const next=items.filter(x=>x.address!==address);setItems(next);localStorage.setItem("velocity-watchlist",JSON.stringify(next))}
-return <main className="min-h-screen bg-[var(--bg)] text-[var(--fg)]"><header className="border-b border-[var(--line)]"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8"><Link href="/discover" className="font-semibold">La😂Print <span className="text-[var(--muted)]">/ VELOCITY</span></Link><div className="flex gap-2"><ThemeToggle/><Link href="/connect/fund" className="rounded-full border border-[var(--line-strong)] px-4 py-2 text-xs">Connect</Link></div></div></header>
-<section className="mx-auto max-w-5xl px-5 py-12"><div className="mono text-[9px] uppercase tracking-[.2em] text-[var(--muted)]">Private in this browser</div><h1 className="mt-3 text-5xl font-semibold tracking-[-.05em]">Watch.</h1><p className="mt-4 max-w-xl text-sm leading-6 text-[var(--muted)]">Keep interesting markets close without connecting a wallet. Your watchlist stays local to this browser.</p>
-{items.length===0?<div className="mt-10 rounded-3xl border border-[var(--line)] p-10 text-center"><div className="text-lg">Nothing here yet.</div><p className="mt-2 text-sm text-[var(--muted)]">Find a market you want to follow and tap Watch.</p><Link href="/discover" className="mt-6 inline-block rounded-full bg-[var(--fg)] px-6 py-3 text-xs font-bold text-[var(--bg)]">Explore market</Link></div>:<div className="mt-10 space-y-2">{items.map(t=><div key={t.address} className="flex items-center justify-between rounded-2xl border border-[var(--line)] p-4"><Link href={"/token?address="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="flex items-center gap-3">{t.image?<img src={t.image} alt="" className="h-10 w-10 rounded-full"/>:<div className="h-10 w-10 rounded-full border border-[var(--line)]"/>}<div><div className="font-semibold">{t.symbol}</div><div className="text-[10px] text-[var(--muted)]">{t.name}</div></div></Link><div className="flex items-center gap-5"><div className="text-right"><div className="text-sm">{t.priceUsd||"—"}</div><div className="text-[10px]">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% · {money(t.volume24h)}</div></div><button onClick={()=>remove(t.address)} className="rounded-full border border-[var(--line-strong)] px-3 py-2 text-[10px]">Remove</button></div></div>)}</div>}</section>
-<nav className="fixed bottom-0 left-0 right-0 grid grid-cols-4 border-t border-[var(--line)] bg-[var(--bg)]/95 p-2 backdrop-blur md:hidden"><Link href="/discover" className="py-3 text-center text-[10px]">🔥 Discover</Link><Link href="/watch" className="py-3 text-center text-[10px] font-semibold">◉ Watch</Link><Link href="/autopilot" className="py-3 text-center text-[10px]">⚡ Auto</Link><Link href="/connect/fund" className="py-3 text-center text-[10px]">◉ Wallet</Link></nav></main>}
+export default function Watch(){
+  const [items,setItems]=useState<Item[]>([]);
+  const [refreshing,setRefreshing]=useState(false);
+
+  async function refresh(){
+    try{
+      setRefreshing(true);
+      const saved:Item[]=JSON.parse(localStorage.getItem("velocity-watchlist")||"[]");
+      if(!saved.length){setItems([]);return}
+      const r=await fetch("/api/discovery",{cache:"no-store"});
+      const d=await r.json();
+      const map=new Map<string,Item>((d.tokens||[]).map((x:Item)=>[x.address,x]));
+      const merged=saved.map(x=>map.get(x.address)||x);
+      setItems(merged);
+      localStorage.setItem("velocity-watchlist",JSON.stringify(merged));
+    }catch{}finally{setRefreshing(false)}
+  }
+
+  useEffect(()=>{void refresh();const id=window.setInterval(refresh,30000);return()=>window.clearInterval(id)},[]);
+
+  function remove(address:string){
+    const next=items.filter(x=>x.address!==address);
+    setItems(next);localStorage.setItem("velocity-watchlist",JSON.stringify(next));
+  }
+
+  return <main className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
+    <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--bg)]/90 backdrop-blur"><div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-5 md:px-8"><Link href="/discover" className="font-semibold">La😂Print <span className="text-[var(--muted)]">/ VELOCITY</span></Link><div className="flex gap-2"><button onClick={refresh} className="rounded-full border border-[var(--line-strong)] px-3 py-2 text-[10px]">{refreshing?"Refreshing":"Refresh"}</button><ThemeToggle/><Link href="/connect/fund" className="rounded-full border border-[var(--line-strong)] px-4 py-2 text-xs">Connect</Link></div></div></header>
+    <section className="mx-auto max-w-5xl px-5 py-12"><div className="mono text-[9px] uppercase tracking-[.2em] text-[var(--muted)]">Private in this browser</div><h1 className="mt-3 text-5xl font-semibold tracking-[-.05em]">Watch.</h1><p className="mt-4 max-w-xl text-sm leading-6 text-[var(--muted)]">Keep interesting markets close without connecting a wallet. Prices and flow refresh from the live discovery feed when available.</p>
+    {items.length===0?<div className="mt-10 rounded-3xl border border-[var(--line)] p-10 text-center"><div className="text-lg">Nothing here yet.</div><p className="mt-2 text-sm text-[var(--muted)]">Find a market you want to follow and tap Watch.</p><Link href="/discover" className="mt-6 inline-block rounded-full bg-[var(--fg)] px-6 py-3 text-xs font-bold text-[var(--bg)]">Explore market</Link></div>:<div className="mt-10 space-y-2">{items.map(t=><div key={t.address} className="flex items-center justify-between gap-4 rounded-2xl border border-[var(--line)] p-4"><Link href={"/token?address="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="flex min-w-0 items-center gap-3">{t.image?<img src={t.image} alt="" className="h-10 w-10 rounded-full"/>:<div className="h-10 w-10 rounded-full border border-[var(--line)]"/>}<div className="min-w-0"><div className="font-semibold">{t.symbol}</div><div className="truncate text-[10px] text-[var(--muted)]">{t.name}</div></div></Link><div className="flex items-center gap-3"><div className="hidden text-right sm:block"><div className="text-sm">{t.priceUsd||"—"}</div><div className="text-[10px]">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% · {money(t.volume24h)}</div></div><button onClick={()=>remove(t.address)} className="rounded-full border border-[var(--line-strong)] px-3 py-2 text-[10px]">Remove</button></div></div>)}</div>}</section>
+    <nav className="fixed bottom-0 left-0 right-0 grid grid-cols-4 border-t border-[var(--line)] bg-[var(--bg)]/95 p-2 backdrop-blur md:hidden"><Link href="/discover" className="py-3 text-center text-[10px]">🔥 Discover</Link><Link href="/watch" className="py-3 text-center text-[10px] font-semibold">◉ Watch</Link><Link href="/autopilot" className="py-3 text-center text-[10px]">⚡ Auto</Link><Link href="/connect/fund" className="py-3 text-center text-[10px]">◉ Wallet</Link></nav>
+  </main>
+}
