@@ -14,7 +14,7 @@ export async function POST(req:Request){
  try{
   const input=await req.json();
   const action=String(input?.action||"");
-  const target=action==="prepare"?"/api/spot-execution/prepare":action==="submit"?"/api/spot-execution/submit":action==="confirm"?"/api/spot-execution/confirm":null;
+  const target=action==="prepare"?"/api/spot-execution/prepare":action==="submit"?"/api/spot-execution/submit":action==="confirm"?"/api/spot-execution/confirm":action==="exit"?"/api/spot-exit":null;
   if(!target)return NextResponse.json({ok:false,error:"Invalid execution action"},{status:400});
   const r=await fetch(new URL(target,backend),{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify(input),cache:"no-store"});
   const d=await r.json().catch(()=>({ok:false,error:"Invalid backend response"}));
