@@ -1,17 +1,124 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
 
-type Token={address:string;name:string;symbol:string;image:string|null;priceUsd:string|null;liquidityUsd:number;volume1h:number;volume24h:number;change1h:number;change24h:number;buys5m:number;sells5m:number;buys1h:number;sells1h:number};
-export default function TokenPage(){const q=useSearchParams();const address=q.get("address");const symbol=q.get("symbol")||"TOKEN";const [t,setT]=useState<Token|null>(null);const [error,setError]=useState("");
-useEffect(()=>{fetch("/api/discovery",{cache:"no-store"}).then(r=>r.json()).then(d=>{const x=(d.tokens||[]).find((v:Token)=>v.address===address);if(x)setT(x);else setError("Token is no longer in the current discovery set.")}).catch(()=>setError("Market data unavailable."))},[address]);
+type Token={
+  address:string; name:string; symbol:string; image:string|null; priceUsd:string|null;
+  liquidityUsd:number; volume1h:number; volume24h:number; change1h:number; change24h:number;
+  buys5m:number; sells5m:number; buys1h:number; sells1h:number
+};
+
 const money=(n:number)=>n>=1e6?"$"+(n/1e6).toFixed(1)+"M":n>=1e3?"$"+(n/1e3).toFixed(1)+"K":"$"+n.toFixed(0);
-const p=t?.priceUsd?Number(t.priceUsd):0;const total=(t?.buys5m||0)+(t?.sells5m||0);const buy=total?Math.round((t!.buys5m/total)*100):0;
-return <main className="min-h-screen bg-[var(--bg)] text-[var(--fg)]"><header className="border-b border-[var(--line)]"><div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-5"><Link href="/discover" className="text-xs text-[var(--muted)]">← Discover</Link><div className="flex items-center gap-2"><ThemeToggle/><Link href="/connect/fund" className="rounded-full border border-[var(--line-strong)] px-4 py-2 text-xs">Connect</Link></div></div></header>
-<section className="mx-auto max-w-5xl px-5 py-10 md:py-16">{error?<div className="rounded-2xl border border-[var(--line)] p-8 text-sm text-[var(--muted)]">{error}</div>:!t?<div className="py-20 text-sm text-[var(--muted)]">Loading live market data…</div>:<><div className="flex items-center gap-4">{t.image?<img src={t.image} alt="" className="h-14 w-14 rounded-full object-cover"/>:<div className="h-14 w-14 rounded-full border border-[var(--line)]"/>}<div><div className="mono text-[9px] text-[var(--muted)]">TOKEN / SOLANA</div><h1 className="mt-1 text-3xl font-semibold">{t.symbol}</h1><div className="text-xs text-[var(--muted)]">{t.name}</div></div></div>
-<div className="mt-10 grid gap-8 lg:grid-cols-[1.5fr_1fr]"><div><div className="text-5xl font-semibold tracking-[-.05em]">{p>=1?"$"+p.toFixed(2):p>=.01?"$"+p.toFixed(4):"$"+p.toPrecision(4)}</div><div className="mt-2 text-sm">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% <span className="text-[var(--muted)]">1H</span></div><div className="mt-8 flex h-72 items-end gap-1 rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-6"><div className="h-[28%] w-full bg-[var(--line-strong)]"/><div className="h-[42%] w-full bg-[var(--line-strong)]"/><div className="h-[35%] w-full bg-[var(--line-strong)]"/><div className="h-[58%] w-full bg-[var(--line-strong)]"/><div className="h-[52%] w-full bg-[var(--line-strong)]"/><div className="h-[72%] w-full bg-[var(--line-strong)]"/><div className="h-[68%] w-full bg-[var(--line-strong)]"/><div className="h-[86%] w-full bg-[var(--fg)]"/></div><div className="mt-3 flex gap-5 text-[10px] text-[var(--muted)]">5M　30M　1H　6H　24H</div></div>
-<div className="space-y-3"><div className="rounded-3xl border border-[var(--line)] p-5"><div className="mono text-[9px] text-[var(--muted)]">MARKET FLOW</div><div className="mt-5 flex justify-between text-sm"><span>Buyers</span><span>{buy}%</span></div><div className="mt-2 h-2 rounded-full bg-[var(--line)]"><div className="h-full bg-[var(--fg)]" style={{width:buy+"%"}}/></div><div className="mt-5 grid grid-cols-2 gap-4"><div><div className="mono text-[8px] text-[var(--muted)]">VOLUME</div><div className="mt-1">{money(t.volume24h)}</div></div><div><div className="mono text-[8px] text-[var(--muted)]">LIQUIDITY</div><div className="mt-1">{money(t.liquidityUsd)}</div></div></div></div><div className="rounded-3xl border border-[var(--line)] p-5"><div className="mono text-[9px] text-[var(--muted)]">ACTIVITY</div><div className="mt-4 space-y-3 text-xs text-[var(--muted)]"><div>● {t.buys5m} buys in 5m</div><div>● {t.sells5m} sells in 5m</div><div>● {t.buys1h} buys in 1h</div><div>● {t.sells1h} sells in 1h</div></div></div></div></div>
-<div className="mt-8 flex gap-3"><Link href={"/trade?token="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="rounded-full bg-[var(--fg)] px-6 py-3 text-xs font-bold text-[var(--bg)]">Trade {t.symbol}</Link><Link href="/discover" className="rounded-full border border-[var(--line-strong)] px-6 py-3 text-xs">Keep exploring</Link></div></>}</section></main>}
+const price=(v:string|null)=>{if(!v)return "—";const n=Number(v);if(!Number.isFinite(n))return "—";return n>=1?"$"+n.toFixed(2):n>=.01?"$"+n.toFixed(4):"$"+n.toPrecision(4)};
+
+function metricLabel(value:number){return value>=70?"High":value>=40?"Moderate":"Low"}
+
+export default function TokenPage(){
+  const q=useSearchParams();
+  const address=q.get("address");
+  const [t,setT]=useState<Token|null>(null);
+  const [error,setError]=useState("");
+  const [watched,setWatched]=useState(false);
+
+  async function load(){
+    if(!address)return;
+    try{
+      const r=await fetch("/api/discovery",{cache:"no-store"});
+      const d=await r.json();
+      const x=(d.tokens||[]).find((v:Token)=>v.address===address);
+      if(x){setT(x);setError("")} else setError("Token is no longer in the current discovery set.");
+    }catch{setError("Market data unavailable.")}
+  }
+
+  useEffect(()=>{
+    void load();
+    const id=window.setInterval(load,30000);
+    try{setWatched(JSON.parse(localStorage.getItem("velocity-watchlist")||"[]").some((x:Token)=>x.address===address))}catch{}
+    return()=>window.clearInterval(id);
+  },[address]);
+
+  function toggleWatch(){
+    if(!t)return;
+    try{
+      const key="velocity-watchlist";
+      const list:Token[]=JSON.parse(localStorage.getItem(key)||"[]");
+      const exists=list.some(x=>x.address===t.address);
+      const next=exists?list.filter(x=>x.address!==t.address):[...list,t];
+      localStorage.setItem(key,JSON.stringify(next));
+      setWatched(!exists);
+    }catch{}
+  }
+
+  const stats=useMemo(()=>{
+    if(!t)return null;
+    const flowTotal=t.buys5m+t.sells5m;
+    const buyPressure=flowTotal?Math.round(t.buys5m/flowTotal*100):0;
+    const activity=t.buys1h+t.sells1h;
+    const liquidity=t.liquidityUsd>0?Math.min(100,(t.liquidityUsd/100000)*100):0;
+    const volume=t.volume1h>0?Math.min(100,(t.volume1h/100000)*100):0;
+    return {buyPressure,activity,liquidity,volume};
+  },[t]);
+
+  return <main className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
+    <header className="sticky top-0 z-20 border-b border-[var(--line)] bg-[var(--bg)]/90 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
+        <Link href="/discover" className="text-sm text-[var(--muted)]">← Discover</Link>
+        <div className="flex items-center gap-2"><ThemeToggle/><Link href="/connect/fund" className="rounded-full border border-[var(--line-strong)] px-4 py-2 text-xs">Connect</Link></div>
+      </div>
+    </header>
+
+    <section className="mx-auto max-w-6xl px-5 py-10 md:py-14">
+      {error?<div className="rounded-3xl border border-[var(--line)] p-8 text-sm text-[var(--muted)]">{error}<Link href="/discover" className="mt-5 block text-[var(--fg)] underline">Return to discovery</Link></div>:!t?<div className="py-20 text-sm text-[var(--muted)]">Loading live market data…</div>:<>
+        <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            {t.image?<img src={t.image} alt="" className="h-14 w-14 rounded-full object-cover"/>:<div className="h-14 w-14 rounded-full border border-[var(--line)]"/>}
+            <div><div className="mono text-[9px] text-[var(--muted)]">TOKEN / SOLANA</div><h1 className="mt-1 text-3xl font-semibold">{t.symbol}</h1><div className="text-xs text-[var(--muted)]">{t.name}</div></div>
+          </div>
+          <div className="flex gap-2"><button onClick={toggleWatch} className="rounded-full border border-[var(--line-strong)] px-5 py-3 text-xs">{watched?"Watching":"Watch"}</button><Link href={"/trade?token="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="rounded-full bg-[var(--fg)] px-6 py-3 text-xs font-bold text-[var(--bg)]">Trade {t.symbol}</Link></div>
+        </div>
+
+        <div className="mt-10 grid gap-8 lg:grid-cols-[1.45fr_.85fr]">
+          <div>
+            <div className="flex items-end justify-between"><div><div className="text-5xl font-semibold tracking-[-.05em]">{price(t.priceUsd)}</div><div className="mt-2 text-sm">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% <span className="text-[var(--muted)]">1H</span></div></div><div className="mono text-[9px] text-[var(--muted)]">LIVE SNAPSHOT · 30S</div></div>
+            <div className="mt-8 rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-6">
+              <div className="mono text-[9px] text-[var(--muted)]">PRICE HISTORY</div>
+              <div className="mt-6 flex h-52 items-center justify-center border-b border-[var(--line)] text-center">
+                <div><div className="text-sm">Historical candles are not available from the current discovery feed.</div><div className="mt-2 text-[10px] text-[var(--muted)]">The page will not fabricate a chart from snapshot data.</div></div>
+              </div>
+              <div className="mt-4 flex justify-between text-[9px] text-[var(--muted)]"><span>5M</span><span>30M</span><span>1H</span><span>6H</span><span>24H</span></div>
+            </div>
+          </div>
+
+          <aside className="space-y-3">
+            <div className="rounded-3xl border border-[var(--line)] p-5">
+              <div className="mono text-[9px] text-[var(--muted)]">MARKET SNAPSHOT</div>
+              <div className="mt-5 grid grid-cols-2 gap-5">
+                <div><div className="mono text-[8px] text-[var(--muted)]">24H VOLUME</div><div className="mt-1">{money(t.volume24h)}</div></div>
+                <div><div className="mono text-[8px] text-[var(--muted)]">LIQUIDITY</div><div className="mt-1">{money(t.liquidityUsd)}</div></div>
+                <div><div className="mono text-[8px] text-[var(--muted)]">5M BUYS</div><div className="mt-1">{t.buys5m}</div></div>
+                <div><div className="mono text-[8px] text-[var(--muted)]">5M SELLS</div><div className="mt-1">{t.sells5m}</div></div>
+              </div>
+            </div>
+            <div className="rounded-3xl border border-[var(--line)] p-5">
+              <div className="mono text-[9px] text-[var(--muted)]">FLOW</div>
+              <div className="mt-5 flex justify-between text-sm"><span>Buy pressure</span><span>{stats?.buyPressure}%</span></div>
+              <div className="mt-2 h-2 rounded-full bg-[var(--line)]"><div className="h-full bg-[var(--fg)]" style={{width:(stats?.buyPressure||0)+"%"}}/></div>
+              <div className="mt-4 grid grid-cols-2 gap-4 text-xs text-[var(--muted)]"><div>1H buys <b className="text-[var(--fg)]">{t.buys1h}</b></div><div>1H sells <b className="text-[var(--fg)]">{t.sells1h}</b></div></div>
+            </div>
+          </aside>
+        </div>
+
+        <section className="mt-8 rounded-3xl border border-[var(--line)] p-6">
+          <div className="mono text-[9px] text-[var(--muted)]">ANALYZE · DERIVED FROM CURRENT FEED</div>
+          <div className="mt-5 grid gap-4 sm:grid-cols-3">
+            {[["Buy pressure",stats?.buyPressure||0,stats?.buyPressure?metricLabel(stats.buyPressure):"No flow"],["1H activity",stats?.activity||0,stats?.activity?String(stats.activity)+" transactions":"No activity"],["Liquidity depth",stats?.liquidity||0,stats?.liquidity?metricLabel(stats.liquidity):"No liquidity"]].map(([label,value,detail])=><div key={label as string} className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="text-sm">{label}</div><div className="mt-3 text-2xl font-semibold">{typeof value==="number"&&label!=="1H activity"?Math.round(value as number)+"%":value}</div><div className="mt-1 text-[10px] text-[var(--muted)]">{detail}</div></div>)}
+          </div>
+          <p className="mt-5 text-[10px] leading-5 text-[var(--muted)]">These are mechanical summaries of the current market snapshot, not a recommendation. They can change as new data arrives.</p>
+        </section>
+      </>}
+    </section>
+  </main>
+}
