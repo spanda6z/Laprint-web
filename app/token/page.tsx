@@ -32,6 +32,7 @@ function TokenContent(){
   const [social,setSocial]=useState<any[]>([]);
   const [socialConfigured,setSocialConfigured]=useState(false);
   const [events,setEvents]=useState<any[]>([]);
+  const [snapshots,setSnapshots]=useState<any[]>([]);
 
   async function load(){
     if(!address)return;
@@ -46,7 +47,7 @@ function TokenContent(){
   useEffect(()=>{
     void load();
     const socialLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/social-signals?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setSocial(Array.isArray(d.signals)?d.signals:[]);setSocialConfigured(Boolean(d.configured));}catch{setSocial([])}};
-    const eventsLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/token-events?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setEvents(Array.isArray(d.events)?d.events:[]);}catch{setEvents([])}};
+    const eventsLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/token-events?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setEvents(Array.isArray(d.events)?d.events:[]);setSnapshots(Array.isArray(d.snapshots)?d.snapshots:[]);}catch{setEvents([])}};
     void socialLoad();
     void eventsLoad();
     const id=window.setInterval(load,30000);
@@ -71,6 +72,18 @@ function TokenContent(){
     if(!t)return;
     try{await navigator.clipboard.writeText(t.address);setCopied(true);window.setTimeout(()=>setCopied(false),1400)}catch{}
   }
+
+  const chartPoints=useMemo(()=>{
+    const rows=snapshots.filter((s:any)=>typeof s.priceUsd==="number"&&Number.isFinite(s.priceUsd));
+    if(rows.length<2)return "";
+    const values=rows.map((s:any)=>s.priceUsd as number);
+    const min=Math.min(...values), max=Math.max(...values), span=max-min||1;
+    return rows.map((s:any,i:number)=>{
+      const x=(i/(rows.length-1))*800;
+      const y=238-((s.priceUsd-min)/span)*216;
+      return \`${x.toFixed(1)},${y.toFixed(1)}\`;
+    }).join(" ");
+  },[snapshots]);
 
   const stats=useMemo(()=>{
     if(!t)return null;
@@ -103,10 +116,11 @@ function TokenContent(){
           <div>
             <div className="flex items-end justify-between"><div><div className="text-5xl font-semibold tracking-[-.05em]">{price(t.priceUsd)}</div><div className="mt-2 text-sm">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% <span className="text-[var(--muted)]">1H</span></div></div><div className="mono text-[9px] text-[var(--muted)]">LIVE SNAPSHOT · 30S</div></div>
             <div className="mt-8 rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-6">
-              <div className="mono text-[9px] text-[var(--muted)]">PRICE HISTORY</div>
-              <div className="mt-6 flex h-52 items-center justify-center border-b border-[var(--line)] text-center"><div><div className="text-sm">Historical candles are not available from the current discovery feed.</div><div className="mt-2 text-[10px] text-[var(--muted)]">The page will not fabricate a chart from snapshot data.</div></div></div>
-              <div className="mt-4 flex justify-between text-[9px] text-[var(--muted)]"><span>5M</span><span>30M</span><span>1H</span><span>6H</span><span>24H</span></div>
+              <div className="flex items-center justify-between gap-3"><div className="mono text-[9px] text-[var(--muted)]">PRICE HISTORY</div><div className="mono text-[8px] text-[var(--muted)]">{snapshots.length?\`${snapshots.length} STORED POINTS\`:"NO HISTORY"}</div></div>
+              {chartPoints?<svg viewBox="0 0 800 260" className="mt-5 h-52 w-full" preserveAspectRatio="none" role="img" aria-label="Historical token price from stored market snapshots"><line x1="0" y1="238" x2="800" y2="238" stroke="currentColor" strokeOpacity=".12"/><polyline fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={chartPoints}/></svg>:<div className="mt-6 flex h-52 items-center justify-center border-b border-[var(--line)] text-center"><div><div className="text-sm">Historical price points are still being collected.</div><div className="mt-2 text-[10px] text-[var(--muted)]">The page will not fabricate a chart before real snapshots exist.</div></div></div>}
+              <div className="mt-4 flex justify-between text-[9px] text-[var(--muted)]"><span>120M AGO</span><span>60M</span><span>NOW</span></div>
             </div>
+          </div>
           </div>
 
           <aside className="space-y-3">
