@@ -81,7 +81,7 @@ function TokenContent(){
     return rows.map((s:any,i:number)=>{
       const x=(i/(rows.length-1))*800;
       const y=238-((s.priceUsd-min)/span)*216;
-      return \`${x.toFixed(1)},${y.toFixed(1)}\`;
+      return `${x.toFixed(1)},${y.toFixed(1)}`;
     }).join(" ");
   },[snapshots]);
 
@@ -116,7 +116,7 @@ function TokenContent(){
           <div>
             <div className="flex items-end justify-between"><div><div className="text-5xl font-semibold tracking-[-.05em]">{price(t.priceUsd)}</div><div className="mt-2 text-sm">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% <span className="text-[var(--muted)]">1H</span></div></div><div className="mono text-[9px] text-[var(--muted)]">LIVE SNAPSHOT · 30S</div></div>
             <div className="mt-8 rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-6">
-              <div className="flex items-center justify-between gap-3"><div className="mono text-[9px] text-[var(--muted)]">PRICE HISTORY</div><div className="mono text-[8px] text-[var(--muted)]">{snapshots.length?\`${snapshots.length} STORED POINTS\`:"NO HISTORY"}</div></div>
+              <div className="flex items-center justify-between gap-3"><div className="mono text-[9px] text-[var(--muted)]">PRICE HISTORY</div><div className="mono text-[8px] text-[var(--muted)]">{snapshots.length?`${snapshots.length} STORED POINTS`:"NO HISTORY"}</div></div>
               {chartPoints?<svg viewBox="0 0 800 260" className="mt-5 h-52 w-full" preserveAspectRatio="none" role="img" aria-label="Historical token price from stored market snapshots"><line x1="0" y1="238" x2="800" y2="238" stroke="currentColor" strokeOpacity=".12"/><polyline fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" points={chartPoints}/></svg>:<div className="mt-6 flex h-52 items-center justify-center border-b border-[var(--line)] text-center"><div><div className="text-sm">Historical price points are still being collected.</div><div className="mt-2 text-[10px] text-[var(--muted)]">The page will not fabricate a chart before real snapshots exist.</div></div></div>}
               <div className="mt-4 flex justify-between text-[9px] text-[var(--muted)]"><span>120M AGO</span><span>60M</span><span>NOW</span></div>
             </div>
