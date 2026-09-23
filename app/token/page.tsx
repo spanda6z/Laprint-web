@@ -1,21 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 
 type Token={
   address:string; name:string; symbol:string; image:string|null; priceUsd:string|null;
   liquidityUsd:number; volume1h:number; volume24h:number; change1h:number; change24h:number;
-  buys5m:number; sells5m:number; buys1h:number; sells1h:number
+  buys5m:number; sells5m:number; buys1h:number; sells1h:number;
+  marketCapUsd?:number|null; fdvUsd?:number|null; holders?:number|null;
+  txns5m?:number|null; txns1h?:number|null;
+  mintAuthority?:string|null; freezeAuthority?:string|null; lpStatus?:string|null;
 };
 
 const money=(n:number)=>n>=1e6?"$"+(n/1e6).toFixed(1)+"M":n>=1e3?"$"+(n/1e3).toFixed(1)+"K":"$"+n.toFixed(0);
 const price=(v:string|null)=>{if(!v)return "—";const n=Number(v);if(!Number.isFinite(n))return "—";return n>=1?"$"+n.toFixed(2):n>=.01?"$"+n.toFixed(4):"$"+n.toPrecision(4)};
+const compact=(n:number|null|undefined)=>n==null?"—":n.toLocaleString();
+const unavailable=(v:unknown)=>v==null||v==="";
 
 function metricLabel(value:number){return value>=70?"High":value>=40?"Moderate":"Low"}
+function shorten(v:string){return v.length>18?v.slice(0,8)+"…"+v.slice(-8):v}
 
 function TokenContent(){
   const q=useSearchParams();
@@ -23,6 +28,7 @@ function TokenContent(){
   const [t,setT]=useState<Token|null>(null);
   const [error,setError]=useState("");
   const [watched,setWatched]=useState(false);
+  const [copied,setCopied]=useState(false);
 
   async function load(){
     if(!address)return;
@@ -30,7 +36,7 @@ function TokenContent(){
       const r=await fetch("/api/discovery",{cache:"no-store"});
       const d=await r.json();
       const x=(d.tokens||[]).find((v:Token)=>v.address===address);
-      if(x){setT(x);setError("")} else setError("Token is no longer in the current discovery set.");
+      if(x){setT(x);setError("")}else setError("Token is no longer in the current discovery set.");
     }catch{setError("Market data unavailable.")}
   }
 
@@ -47,10 +53,14 @@ function TokenContent(){
       const key="velocity-watchlist";
       const list:Token[]=JSON.parse(localStorage.getItem(key)||"[]");
       const exists=list.some(x=>x.address===t.address);
-      const next=exists?list.filter(x=>x.address!==t.address):[...list,t];
-      localStorage.setItem(key,JSON.stringify(next));
+      localStorage.setItem(key,JSON.stringify(exists?list.filter(x=>x.address!==t.address):[...list,t]));
       setWatched(!exists);
     }catch{}
+  }
+
+  async function copyAddress(){
+    if(!t)return;
+    try{await navigator.clipboard.writeText(t.address);setCopied(true);window.setTimeout(()=>setCopied(false),1400)}catch{}
   }
 
   const stats=useMemo(()=>{
@@ -59,8 +69,7 @@ function TokenContent(){
     const buyPressure=flowTotal?Math.round(t.buys5m/flowTotal*100):0;
     const activity=t.buys1h+t.sells1h;
     const liquidity=t.liquidityUsd>0?Math.min(100,(t.liquidityUsd/100000)*100):0;
-    const volume=t.volume1h>0?Math.min(100,(t.volume1h/100000)*100):0;
-    return {buyPressure,activity,liquidity,volume};
+    return {buyPressure,activity,liquidity};
   },[t]);
 
   return <main className="min-h-screen bg-[var(--bg)] text-[var(--fg)]">
@@ -86,9 +95,7 @@ function TokenContent(){
             <div className="flex items-end justify-between"><div><div className="text-5xl font-semibold tracking-[-.05em]">{price(t.priceUsd)}</div><div className="mt-2 text-sm">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% <span className="text-[var(--muted)]">1H</span></div></div><div className="mono text-[9px] text-[var(--muted)]">LIVE SNAPSHOT · 30S</div></div>
             <div className="mt-8 rounded-3xl border border-[var(--line)] bg-[var(--panel)] p-6">
               <div className="mono text-[9px] text-[var(--muted)]">PRICE HISTORY</div>
-              <div className="mt-6 flex h-52 items-center justify-center border-b border-[var(--line)] text-center">
-                <div><div className="text-sm">Historical candles are not available from the current discovery feed.</div><div className="mt-2 text-[10px] text-[var(--muted)]">The page will not fabricate a chart from snapshot data.</div></div>
-              </div>
+              <div className="mt-6 flex h-52 items-center justify-center border-b border-[var(--line)] text-center"><div><div className="text-sm">Historical candles are not available from the current discovery feed.</div><div className="mt-2 text-[10px] text-[var(--muted)]">The page will not fabricate a chart from snapshot data.</div></div></div>
               <div className="mt-4 flex justify-between text-[9px] text-[var(--muted)]"><span>5M</span><span>30M</span><span>1H</span><span>6H</span><span>24H</span></div>
             </div>
           </div>
@@ -111,6 +118,45 @@ function TokenContent(){
             </div>
           </aside>
         </div>
+
+        <section className="mt-8 rounded-3xl border border-[var(--line)] p-6">
+          <div className="mono text-[9px] text-[var(--muted)]">MARKET DETAILS</div>
+          <div className="mt-5 grid gap-px overflow-hidden rounded-2xl border border-[var(--line)] bg-[var(--line)] sm:grid-cols-2 lg:grid-cols-4">
+            {[["MARKET CAP",t.marketCapUsd],["FDV",t.fdvUsd],["24H VOLUME",t.volume24h],["LIQUIDITY",t.liquidityUsd]].map(([label,value])=><div key={label as string} className="bg-[var(--bg)] p-4"><div className="mono text-[8px] text-[var(--muted)]">{label}</div><div className="mt-2 text-lg font-semibold">{unavailable(value)?"—":money(value as number)}</div></div>)}
+          </div>
+
+          <div className="mt-6 grid gap-6 md:grid-cols-2">
+            <div>
+              <div className="mono text-[9px] text-[var(--muted)]">ACTIVITY</div>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-2xl border border-[var(--line)] p-4"><div className="text-[10px] text-[var(--muted)]">5M transactions</div><div className="mt-2 text-xl font-semibold">{compact(t.txns5m ?? (t.buys5m+t.sells5m))}</div></div>
+                <div className="rounded-2xl border border-[var(--line)] p-4"><div className="text-[10px] text-[var(--muted)]">1H transactions</div><div className="mt-2 text-xl font-semibold">{compact(t.txns1h ?? (t.buys1h+t.sells1h))}</div></div>
+                <div className="rounded-2xl border border-[var(--line)] p-4"><div className="text-[10px] text-[var(--muted)]">1H buys</div><div className="mt-2 text-xl font-semibold">{compact(t.buys1h)}</div></div>
+                <div className="rounded-2xl border border-[var(--line)] p-4"><div className="text-[10px] text-[var(--muted)]">1H sells</div><div className="mt-2 text-xl font-semibold">{compact(t.sells1h)}</div></div>
+              </div>
+            </div>
+            <div>
+              <div className="mono text-[9px] text-[var(--muted)]">HOLDERS</div>
+              <div className="mt-3 rounded-2xl border border-[var(--line)] p-4">
+                <div className="text-[10px] text-[var(--muted)]">Total holders</div>
+                <div className="mt-2 text-2xl font-semibold">{compact(t.holders)}</div>
+                <div className="mt-3 text-[10px] text-[var(--muted)]">Holder concentration is shown only when supplied by the market feed.</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <div className="mono text-[9px] text-[var(--muted)]">CONTRACT</div>
+            <button onClick={copyAddress} className="mt-3 flex w-full items-center justify-between gap-4 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4 text-left hover:border-[var(--line-strong)]"><span className="mono truncate text-[10px]">{t.address}</span><span className="shrink-0 text-[10px] text-[var(--muted)]">{copied?"COPIED":"COPY"}</span></button>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <div className="rounded-2xl border border-[var(--line)] p-4"><div className="text-[10px] text-[var(--muted)]">Mint authority</div><div className="mt-2 text-xs">{unavailable(t.mintAuthority)?"Unavailable":shorten(t.mintAuthority as string)}</div></div>
+              <div className="rounded-2xl border border-[var(--line)] p-4"><div className="text-[10px] text-[var(--muted)]">Freeze authority</div><div className="mt-2 text-xs">{unavailable(t.freezeAuthority)?"Unavailable":shorten(t.freezeAuthority as string)}</div></div>
+              <div className="rounded-2xl border border-[var(--line)] p-4"><div className="text-[10px] text-[var(--muted)]">LP status</div><div className="mt-2 text-xs">{unavailable(t.lpStatus)?"Unavailable":t.lpStatus}</div></div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-2xl bg-[var(--panel)] p-4 text-[10px] leading-5 text-[var(--muted)]">Only fields supplied by the live discovery feed are displayed as data. Missing holder, contract, LP, or market-cap fields remain unavailable rather than being estimated or fabricated.</div>
+        </section>
 
         <section className="mt-8 rounded-3xl border border-[var(--line)] p-6">
           <div className="mono text-[9px] text-[var(--muted)]">ANALYZE · DERIVED FROM CURRENT FEED</div>
