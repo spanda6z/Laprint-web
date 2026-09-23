@@ -121,7 +121,6 @@ function TokenContent(){
               <div className="mt-4 flex justify-between text-[9px] text-[var(--muted)]"><span>120M AGO</span><span>60M</span><span>NOW</span></div>
             </div>
           </div>
-          </div>
 
           <aside className="space-y-3">
             <div className="rounded-3xl border border-[var(--line)] p-5">
