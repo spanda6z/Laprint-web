@@ -3,6 +3,7 @@
 import Link from "next/link";
 import TerminalShell from "@/components/TerminalShell";
 import ConnectWallet from "@/components/ConnectWallet";
+import ThemeToggle from "@/components/ThemeToggle";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { VersionedTransaction } from "@solana/web3.js";
 import { useSearchParams } from "next/navigation";
@@ -111,29 +112,29 @@ function TradeContent() {
   return (
     <TerminalShell>
       <div className="mx-auto max-w-5xl px-5 py-8 md:px-8">
-        <Link href="/discover" className="text-sm text-zinc-500">← Discovery</Link>
+        <div className="flex items-center justify-between"><Link href="/discover" className="text-sm text-[var(--muted)]">← Discovery</Link><ThemeToggle /></div>
 
-        <div className="mt-16 mono text-[10px] text-zinc-600">SOLANA / TRADE</div>
+        <div className="mt-16 mono text-[10px] text-[var(--muted)]">SOLANA / TRADE</div>
         <h1 className="mt-4 text-4xl font-semibold">Trade {symbol}.</h1>
-        <p className="mt-3 max-w-xl text-sm leading-6 text-zinc-500">
+        <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
           Live Jupiter routing with user-signed execution. La😂Print never receives or stores your wallet private key.
         </p>
 
         <div className="mt-8 grid gap-5 md:grid-cols-[1.2fr_.8fr]">
-          <section className="rounded-2xl border border-white/10 p-6">
-            <div className="mono text-[9px] text-zinc-600">TOKEN MINT</div>
-            <div className="mt-3 break-all font-mono text-xs text-zinc-400">{mint || "No token selected"}</div>
+          <section className="rounded-2xl border border-[var(--line)] p-6">
+            <div className="mono text-[9px] text-[var(--muted)]">TOKEN MINT</div>
+            <div className="mt-3 break-all font-mono text-xs text-[var(--muted)]">{mint || "No token selected"}</div>
 
-            <label className="mt-8 block text-xs text-zinc-500">
+            <label className="mt-8 block text-xs text-[var(--muted)]">
               BUY WITH SOL
               <input value={sol} onChange={e => setSol(e.target.value)} type="number" min="0.001" step="0.001"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-4 text-sm outline-none" />
+                className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-4 text-sm outline-none" />
             </label>
 
-            <label className="mt-5 block text-xs text-zinc-500">
+            <label className="mt-5 block text-xs text-[var(--muted)]">
               MAX SLIPPAGE (BPS)
               <input value={slippage} onChange={e => setSlippage(e.target.value)} type="number" min="1" max="5000"
-                className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-4 text-sm outline-none" />
+                className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-4 text-sm outline-none" />
             </label>
 
             <div className="mt-6">
@@ -141,51 +142,51 @@ function TradeContent() {
             </div>
 
             <button onClick={getQuote} disabled={busy}
-              className="mt-4 w-full rounded-xl bg-white px-5 py-4 text-sm font-bold text-black disabled:opacity-50">
+              className="mt-4 w-full rounded-xl bg-[var(--fg)] px-5 py-4 text-sm font-bold text-[var(--bg)] disabled:opacity-50">
               Get live route
             </button>
 
             {quote && (
-              <div className="mt-4 rounded-xl border border-white/10 p-4">
-                <div className="mono text-[9px] text-zinc-600">ROUTE READY</div>
+              <div className="mt-4 rounded-xl border border-[var(--line)] p-4">
+                <div className="mono text-[9px] text-[var(--muted)]">ROUTE READY</div>
                 <div className="mt-2 grid grid-cols-2 gap-3 text-xs">
-                  <div><span className="text-zinc-600">Input</span><div className="mt-1">{Number(quote.inAmount || 0) / 1e9} SOL</div></div>
-                  <div><span className="text-zinc-600">Output</span><div className="mt-1">{quote.outAmount}</div></div>
-                  <div><span className="text-zinc-600">Price impact</span><div className="mt-1">{quote.priceImpactPct ?? "n/a"}%</div></div>
-                  <div><span className="text-zinc-600">Route</span><div className="mt-1">{quote.routePlan?.length ?? 0} step(s)</div></div>
+                  <div><span className="text-[var(--muted)]">Input</span><div className="mt-1">{Number(quote.inAmount || 0) / 1e9} SOL</div></div>
+                  <div><span className="text-[var(--muted)]">Output</span><div className="mt-1">{quote.outAmount}</div></div>
+                  <div><span className="text-[var(--muted)]">Price impact</span><div className="mt-1">{quote.priceImpactPct ?? "n/a"}%</div></div>
+                  <div><span className="text-[var(--muted)]">Route</span><div className="mt-1">{quote.routePlan?.length ?? 0} step(s)</div></div>
                 </div>
               </div>
             )}
 
             <button onClick={executeManualSwap}
               disabled={busy || !quote || !publicKey || mode !== "manual"}
-              className="mt-4 w-full rounded-xl border border-white/20 px-5 py-4 text-sm font-bold disabled:opacity-40">
+              className="mt-4 w-full rounded-xl border border-[var(--line-strong)] px-5 py-4 text-sm font-bold disabled:opacity-40">
               {busy ? "Processing…" : "Sign & swap"}
             </button>
 
             <Link
               href={"/autopilot/spot?token=" + encodeURIComponent(mint) + "&symbol=" + encodeURIComponent(symbol)}
-              className="mt-3 block w-full rounded-xl border border-white/10 px-5 py-4 text-center text-sm font-bold text-zinc-300"
+              className="mt-3 block w-full rounded-xl border border-[var(--line)] px-5 py-4 text-center text-sm font-bold text-[var(--muted)]"
             >
               Automate this token →
             </Link>
 
-            {status && <div className="mt-4 rounded-xl border border-white/10 p-4 text-sm text-zinc-400">{status}</div>}
+            {status && <div className="mt-4 rounded-xl border border-[var(--line)] p-4 text-sm text-[var(--muted)]">{status}</div>}
 
             {signature && (
               <a
                 href={"https://solscan.io/tx/" + signature}
                 target="_blank"
                 rel="noreferrer"
-                className="mt-4 block break-all text-xs text-zinc-400 underline"
+                className="mt-4 block break-all text-xs text-[var(--muted)] underline"
               >
                 View transaction: {signature}
               </a>
             )}
           </section>
 
-          <section className="rounded-2xl border border-white/10 p-6">
-            <div className="mono text-[9px] text-zinc-600">EXECUTION MODE</div>
+          <section className="rounded-2xl border border-[var(--line)] p-6">
+            <div className="mono text-[9px] text-[var(--muted)]">EXECUTION MODE</div>
             <div className="mt-4 space-y-2">
               {[
                 ["signal", "Signal only", "Discovery can trigger strategy evaluation."],
@@ -193,14 +194,14 @@ function TradeContent() {
                 ["live", "Live automation", "Requires an approved execution signer."],
               ].map(([value, label, desc]) => (
                 <button key={value} onClick={() => setMode(value as any)}
-                  className={"w-full rounded-xl border p-4 text-left " + (mode === value ? "border-white bg-white text-black" : "border-white/10 text-zinc-400")}>
+                  className={"w-full rounded-xl border p-4 text-left " + (mode === value ? "border-white bg-[var(--fg)] text-[var(--bg)]" : "border-[var(--line)] text-[var(--muted)]")}>
                   <div className="text-sm font-semibold">{label}</div>
-                  <div className={"mt-1 text-[10px] " + (mode === value ? "text-black/60" : "text-zinc-600")}>{desc}</div>
+                  <div className={"mt-1 text-[10px] " + (mode === value ? "text-[var(--bg)]/60" : "text-[var(--muted)]")}>{desc}</div>
                 </button>
               ))}
             </div>
 
-            <div className="mt-6 rounded-xl border border-white/5 p-4 text-[10px] leading-5 text-zinc-600">
+            <div className="mt-6 rounded-xl border border-[var(--line)] p-4 text-[10px] leading-5 text-[var(--muted)]">
               Live automation remains gated. An unattended spot trader needs an explicit delegated signer with spending limits, risk controls, transaction simulation and emergency-stop handling.
             </div>
           </section>
@@ -211,5 +212,5 @@ function TradeContent() {
 }
 
 export default function Trade() {
-  return <Suspense fallback={<main className="min-h-screen bg-[#070707] p-8 text-zinc-500">Loading trade…</main>}><TradeContent /></Suspense>;
+  return <Suspense fallback={<main className="min-h-screen bg-[var(--bg)] p-8 text-[var(--muted)]">Loading trade…</main>}><TradeContent /></Suspense>;
 }
