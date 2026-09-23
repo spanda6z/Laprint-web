@@ -270,12 +270,12 @@ export default function Autopilot() {
   return (
     <TerminalShell>
       <div className="mx-auto max-w-6xl px-5 py-8 md:px-8">
-        <div className="mono text-[10px] text-zinc-600">AUTOPILOT / SPOT</div>
+        <div className="mono text-[10px] text-[var(--muted)]">AUTOPILOT / SPOT</div>
 
         <div className="mt-4 flex items-end justify-between gap-4">
           <div>
             <h1 className="text-4xl font-semibold">Autopilot</h1>
-            <p className="mt-2 text-sm text-zinc-500">
+            <p className="mt-2 text-sm text-[var(--muted)]">
               Signal evaluation, risk gates and execution readiness.
             </p>
           </div>
@@ -295,7 +295,7 @@ export default function Autopilot() {
         </div>
 
         {!publicKey ? (
-          <div className="mt-8 rounded-2xl border border-white/10 p-12 text-center text-sm text-zinc-500">
+          <div className="mt-8 rounded-2xl border border-[var(--line)] p-12 text-center text-sm text-[var(--muted)]">
             Connect your wallet to view strategies.
           </div>
         ) : (
@@ -316,27 +316,27 @@ export default function Autopilot() {
               ].map(([key, value]) => (
                 <div
                   key={String(key)}
-                  className="rounded-2xl border border-white/10 p-5"
+                  className="rounded-2xl border border-[var(--line)] p-5"
                 >
-                  <div className="mono text-[10px] text-zinc-600">{key}</div>
+                  <div className="mono text-[10px] text-[var(--muted)]">{key}</div>
                   <div className="mt-3 text-2xl">{value}</div>
                 </div>
               ))}
             </div>
 
             {notice && (
-              <div className="mt-4 rounded-xl border border-white/10 px-4 py-3 text-xs text-zinc-500">
+              <div className="mt-4 rounded-xl border border-[var(--line)] px-4 py-3 text-xs text-[var(--muted)]">
                 {notice}
               </div>
             )}
 
-            <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
-              <div className="border-b border-white/10 px-5 py-4 mono text-[10px] text-zinc-600">
+            <section className="mt-8 overflow-hidden rounded-2xl border border-[var(--line)]">
+              <div className="border-b border-[var(--line)] px-5 py-4 mono text-[10px] text-[var(--muted)]">
                 ACTIVE STRATEGIES
               </div>
 
               {(data?.strategies ?? []).length === 0 ? (
-                <div className="p-10 text-sm text-zinc-600">
+                <div className="p-10 text-sm text-[var(--muted)]">
                   No strategies yet. Open a token from Discover and configure
                   Automate.
                 </div>
@@ -344,28 +344,28 @@ export default function Autopilot() {
                 data!.strategies.map((s) => (
                   <div
                     key={s.id}
-                    className="grid gap-2 border-b border-white/5 px-5 py-5 md:grid-cols-6"
+                    className="grid gap-2 border-b border-[var(--line)] px-5 py-5 md:grid-cols-6"
                   >
                     <div>
                       <div className="font-medium">
                         {s.symbol || s.token_address.slice(0, 8) + "…"}
                       </div>
-                      <div className="mono text-[10px] text-zinc-600">
+                      <div className="mono text-[10px] text-[var(--muted)]">
                         {s.strategy.toUpperCase()}
                       </div>
                     </div>
                     <div>
-                      <div className="mono text-[9px] text-zinc-600">MAX</div>
+                      <div className="mono text-[9px] text-[var(--muted)]">MAX</div>
                       <div className="mono text-xs">{s.max_trade_sol} SOL</div>
                     </div>
                     <div>
-                      <div className="mono text-[9px] text-zinc-600">TP / SL</div>
+                      <div className="mono text-[9px] text-[var(--muted)]">TP / SL</div>
                       <div className="mono text-xs">
                         +{s.take_profit_pct}% / -{s.stop_loss_pct}%
                       </div>
                     </div>
                     <div>
-                      <div className="mono text-[9px] text-zinc-600">TRAIL</div>
+                      <div className="mono text-[9px] text-[var(--muted)]">TRAIL</div>
                       <div className="mono text-xs">
                         {s.trailing_activation_pct
                           ? "+" +
@@ -377,7 +377,7 @@ export default function Autopilot() {
                       </div>
                     </div>
                     <div>
-                      <div className="mono text-[9px] text-zinc-600">STATUS</div>
+                      <div className="mono text-[9px] text-[var(--muted)]">STATUS</div>
                       <div className="mono text-xs">
                         {s.active ? "ACTIVE" : "PAUSED"} ·{" "}
                         {s.automation_enabled ? "ARMED" : "LOCKED"}
@@ -402,16 +402,16 @@ export default function Autopilot() {
             </section>
 
 
-            <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
-              <div className="border-b border-white/10 px-5 py-4 mono text-[10px] text-zinc-600">OPEN POSITIONS</div>
+            <section className="mt-8 overflow-hidden rounded-2xl border border-[var(--line)]">
+              <div className="border-b border-[var(--line)] px-5 py-4 mono text-[10px] text-[var(--muted)]">OPEN POSITIONS</div>
               {(data?.positions ?? []).filter((p) => p.status === "open").length === 0 ? (
-                <div className="p-10 text-sm text-zinc-600">No open positions.</div>
+                <div className="p-10 text-sm text-[var(--muted)]">No open positions.</div>
               ) : (
                 (data?.positions ?? []).filter((p) => p.status === "open").map((position) => (
-                  <div key={position.id} className="grid gap-3 border-b border-white/5 px-5 py-5 md:grid-cols-[1fr_auto_auto] md:items-center">
+                  <div key={position.id} className="grid gap-3 border-b border-[var(--line)] px-5 py-5 md:grid-cols-[1fr_auto_auto] md:items-center">
                     <div>
                       <div className="font-medium">{position.symbol || position.token_address.slice(0, 8) + "…"}</div>
-                      <div className="mono mt-1 text-[9px] text-zinc-600">{position.input_sol} SOL · entry {position.entry_price_sol}</div>
+                      <div className="mono mt-1 text-[9px] text-[var(--muted)]">{position.input_sol} SOL · entry {position.entry_price_sol}</div>
                     </div>
                     <div className="mono text-xs">{position.realized_pnl_sol == null ? "OPEN" : position.realized_pnl_sol + " SOL"}</div>
                     <button onClick={() => requestExit(position)} disabled={busyJob === "exit:" + position.id || !signMessage} className="rounded-lg border border-red-400/40 px-4 py-2 text-[10px] font-bold text-red-300 disabled:opacity-40">
@@ -421,12 +421,12 @@ export default function Autopilot() {
                 ))
               )}
             </section>
-            <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
-              <div className="flex items-center justify-between border-b border-white/10 px-5 py-4">
-                <span className="mono text-[10px] text-zinc-600">
+            <section className="mt-8 overflow-hidden rounded-2xl border border-[var(--line)]">
+              <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4">
+                <span className="mono text-[10px] text-[var(--muted)]">
                   EXECUTION QUEUE
                 </span>
-                <span className="mono text-[10px] text-zinc-600">
+                <span className="mono text-[10px] text-[var(--muted)]">
                   {
                     executionJobs.filter(
                       (j) => j.status === "awaiting_signature",
@@ -437,20 +437,20 @@ export default function Autopilot() {
               </div>
 
               {executionJobs.length === 0 ? (
-                <div className="p-10 text-sm text-zinc-600">
+                <div className="p-10 text-sm text-[var(--muted)]">
                   No execution intents waiting.
                 </div>
               ) : (
                 executionJobs.slice(0, 10).map((job) => (
                   <div
                     key={job.id}
-                    className="grid gap-3 border-b border-white/5 px-5 py-5 md:grid-cols-[1fr_auto_auto] md:items-center"
+                    className="grid gap-3 border-b border-[var(--line)] px-5 py-5 md:grid-cols-[1fr_auto_auto] md:items-center"
                   >
                     <div>
                       <div className="font-medium">
                         {job.side.toUpperCase()} {job.token_address.slice(0, 8)}…
                       </div>
-                      <div className="mono mt-1 text-[9px] text-zinc-600">
+                      <div className="mono mt-1 text-[9px] text-[var(--muted)]">
                         {job.status.toUpperCase()} · {job.amount_sol} SOL
                       </div>
                       {job.failure_reason && (
@@ -460,7 +460,7 @@ export default function Autopilot() {
                       )}
                     </div>
 
-                    <div className="mono text-[9px] text-zinc-600">
+                    <div className="mono text-[9px] text-[var(--muted)]">
                       {job.max_slippage_bps} BPS
                     </div>
 
@@ -472,12 +472,12 @@ export default function Autopilot() {
                           !signTransaction ||
                           !job.unsigned_transaction
                         }
-                        className="rounded-lg bg-white px-4 py-2 text-[10px] font-bold text-black disabled:opacity-40"
+                        className="rounded-lg bg-[var(--fg)] px-4 py-2 text-[10px] font-bold text-[var(--bg)] disabled:opacity-40"
                       >
                         {busyJob === job.id ? "PROCESSING…" : "REVIEW & SIGN"}
                       </button>
                     ) : (
-                      <span className="mono text-[9px] text-zinc-600">
+                      <span className="mono text-[9px] text-[var(--muted)]">
                         {job.tx_signature
                           ? job.tx_signature.slice(0, 10) + "…"
                           : "—"}
@@ -488,33 +488,33 @@ export default function Autopilot() {
               )}
             </section>
 
-            <section className="mt-8 overflow-hidden rounded-2xl border border-white/10">
-              <div className="border-b border-white/10 px-5 py-4 mono text-[10px] text-zinc-600">
+            <section className="mt-8 overflow-hidden rounded-2xl border border-[var(--line)]">
+              <div className="border-b border-[var(--line)] px-5 py-4 mono text-[10px] text-[var(--muted)]">
                 AUTOMATION LOG
               </div>
 
               {(data?.events ?? []).length === 0 ? (
-                <div className="p-10 text-sm text-zinc-600">
+                <div className="p-10 text-sm text-[var(--muted)]">
                   No evaluation events yet.
                 </div>
               ) : (
                 data!.events.slice(0, 30).map((event) => (
                   <div
                     key={event.id}
-                    className="grid gap-2 border-b border-white/5 px-5 py-4 md:grid-cols-4"
+                    className="grid gap-2 border-b border-[var(--line)] px-5 py-4 md:grid-cols-4"
                   >
-                    <span className="mono text-[10px] text-zinc-500">
+                    <span className="mono text-[10px] text-[var(--muted)]">
                       {new Date(event.created_at).toLocaleTimeString()}
                     </span>
                     <span className="mono text-[10px]">
                       {event.event_type}
                     </span>
-                    <span className="mono text-[10px] text-zinc-500">
+                    <span className="mono text-[10px] text-[var(--muted)]">
                       {event.token_address
                         ? event.token_address.slice(0, 10) + "…"
                         : "—"}
                     </span>
-                    <span className="truncate text-xs text-zinc-500">
+                    <span className="truncate text-xs text-[var(--muted)]">
                       {typeof event.payload === "string"
                         ? event.payload
                         : JSON.stringify(event.payload)}
@@ -527,7 +527,7 @@ export default function Autopilot() {
         )}
 
         {data?.error && (
-          <p className="mt-4 text-xs text-zinc-600">{data.error}</p>
+          <p className="mt-4 text-xs text-[var(--muted)]">{data.error}</p>
         )}
       </div>
     </TerminalShell>
