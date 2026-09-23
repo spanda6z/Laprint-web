@@ -200,6 +200,7 @@ export async function GET(req: NextRequest) {
       ok: true,
       token: { address: token.address, symbol: token.symbol },
       events,
+      snapshots,
       snapshotsConnected: snapshots.length > 0,
       limitations: {
         historicalSnapshots: snapshots.length > 0,
