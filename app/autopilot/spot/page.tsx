@@ -85,43 +85,43 @@ function SpotSetupContent() {
   }
 
   return <TerminalShell><div className="mx-auto max-w-5xl px-5 py-8 md:px-8">
-    <Link href={"/trade?token="+encodeURIComponent(token)+"&symbol="+encodeURIComponent(symbol)} className="text-sm text-zinc-500">← Trade</Link>
-    <div className="mt-16 mono text-[10px] text-zinc-600">SOLANA / AUTOPILOT</div>
+    <Link href={"/trade?token="+encodeURIComponent(token)+"&symbol="+encodeURIComponent(symbol)} className="text-sm text-[var(--muted)]">← Trade</Link>
+    <div className="mt-16 mono text-[10px] text-[var(--muted)]">SOLANA / AUTOPILOT</div>
     <h1 className="mt-4 text-4xl font-semibold">Automate {symbol}.</h1>
-    <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-500">Turn a Discovery token into a persistent strategy. The rules are stored and authenticated by your wallet; unattended execution stays locked until a delegated signer is explicitly approved.</p>
+    <p className="mt-3 max-w-2xl text-sm leading-6 text-[var(--muted)]">Turn a Discovery token into a persistent strategy. The rules are stored and authenticated by your wallet; unattended execution stays locked until a delegated signer is explicitly approved.</p>
 
     <div className="mt-8 grid gap-5 md:grid-cols-2">
-      <section className="rounded-2xl border border-white/10 p-6">
-        <div className="mono text-[9px] text-zinc-600">STRATEGY</div>
+      <section className="rounded-2xl border border-[var(--line)] p-6">
+        <div className="mono text-[9px] text-[var(--muted)]">STRATEGY</div>
         <div className="mt-4 grid grid-cols-2 gap-2">
-          {([["hunter","Hunter"],["rider","Rider"]] as const).map(([v,l])=><button key={v} onClick={()=>setStrategy(v)} className={"rounded-xl border p-4 text-left "+(strategy===v?"border-white bg-white text-black":"border-white/10 text-zinc-400")}><b className="text-sm">{l}</b><div className="mt-1 text-[10px] opacity-60">{v==="hunter"?"New setups / early flow":"Momentum / confirmation"}</div></button>)}
+          {([["hunter","Hunter"],["rider","Rider"]] as const).map(([v,l])=><button key={v} onClick={()=>setStrategy(v)} className={"rounded-xl border p-4 text-left "+(strategy===v?"border-white bg-[var(--fg)] text-[var(--bg)]":"border-[var(--line)] text-[var(--muted)]")}><b className="text-sm">{l}</b><div className="mt-1 text-[10px] opacity-60">{v==="hunter"?"New setups / early flow":"Momentum / confirmation"}</div></button>)}
         </div>
-        <label className="mt-5 block text-xs text-zinc-500">MAX SOL / TRADE<input value={maxTradeSol} onChange={e=>setMaxTradeSol(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-4" /></label>
-        <label className="mt-4 block text-xs text-zinc-500">MAX SLIPPAGE (BPS)<input value={slippage} onChange={e=>setSlippage(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-4" /></label>
-        <label className="mt-4 block text-xs text-zinc-500">MAX OPEN POSITIONS<input value={maxPositions} onChange={e=>setMaxPositions(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-4" /></label>
+        <label className="mt-5 block text-xs text-[var(--muted)]">MAX SOL / TRADE<input value={maxTradeSol} onChange={e=>setMaxTradeSol(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-4" /></label>
+        <label className="mt-4 block text-xs text-[var(--muted)]">MAX SLIPPAGE (BPS)<input value={slippage} onChange={e=>setSlippage(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-4" /></label>
+        <label className="mt-4 block text-xs text-[var(--muted)]">MAX OPEN POSITIONS<input value={maxPositions} onChange={e=>setMaxPositions(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-4" /></label>
       </section>
 
-      <section className="rounded-2xl border border-white/10 p-6">
-        <div className="mono text-[9px] text-zinc-600">EXIT ENGINE</div>
+      <section className="rounded-2xl border border-[var(--line)] p-6">
+        <div className="mono text-[9px] text-[var(--muted)]">EXIT ENGINE</div>
         <div className="grid grid-cols-2 gap-3 mt-4">
-          <label className="text-xs text-zinc-500">TAKE PROFIT %<input value={tp} onChange={e=>setTp(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-3" /></label>
-          <label className="text-xs text-zinc-500">STOP LOSS %<input value={sl} onChange={e=>setSl(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-3" /></label>
-          <label className="text-xs text-zinc-500">TRAIL START %<input value={trailActivation} onChange={e=>setTrailActivation(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-3" /></label>
-          <label className="text-xs text-zinc-500">PULLBACK %<input value={trailPullback} onChange={e=>setTrailPullback(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-3" /></label>
-          <label className="text-xs text-zinc-500">DAILY LOSS CAP (SOL)<input value={dailyLoss} onChange={e=>setDailyLoss(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-3" /></label>
-          <label className="text-xs text-zinc-500">COOLDOWN (SEC)<input value={cooldown} onChange={e=>setCooldown(e.target.value)} className="mt-2 w-full rounded-xl border border-white/10 bg-transparent p-3" /></label>
+          <label className="text-xs text-[var(--muted)]">TAKE PROFIT %<input value={tp} onChange={e=>setTp(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-3" /></label>
+          <label className="text-xs text-[var(--muted)]">STOP LOSS %<input value={sl} onChange={e=>setSl(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-3" /></label>
+          <label className="text-xs text-[var(--muted)]">TRAIL START %<input value={trailActivation} onChange={e=>setTrailActivation(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-3" /></label>
+          <label className="text-xs text-[var(--muted)]">PULLBACK %<input value={trailPullback} onChange={e=>setTrailPullback(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-3" /></label>
+          <label className="text-xs text-[var(--muted)]">DAILY LOSS CAP (SOL)<input value={dailyLoss} onChange={e=>setDailyLoss(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-3" /></label>
+          <label className="text-xs text-[var(--muted)]">COOLDOWN (SEC)<input value={cooldown} onChange={e=>setCooldown(e.target.value)} className="mt-2 w-full rounded-xl border border-[var(--line)] bg-transparent p-3" /></label>
         </div>
       </section>
     </div>
 
-    <div className="mt-5 rounded-2xl border border-white/10 p-6">
+    <div className="mt-5 rounded-2xl border border-[var(--line)] p-6">
       <ConnectWallet />
-      <button onClick={save} className="mt-4 w-full rounded-xl bg-white px-5 py-4 text-sm font-bold text-black">Save automation strategy</button>
-      {status && <div className="mt-4 rounded-xl border border-white/10 p-4 text-sm text-zinc-400">{status}</div>}
+      <button onClick={save} className="mt-4 w-full rounded-xl bg-[var(--fg)] px-5 py-4 text-sm font-bold text-[var(--bg)]">Save automation strategy</button>
+      {status && <div className="mt-4 rounded-xl border border-[var(--line)] p-4 text-sm text-[var(--muted)]">{status}</div>}
     </div>
   </div></TerminalShell>;
 }
 
 export default function SpotAutopilot() {
-  return <Suspense fallback={<main className="min-h-screen bg-[#070707] p-8 text-zinc-500">Loading…</main>}><SpotSetupContent /></Suspense>;
+  return <Suspense fallback={<main className="min-h-screen bg-[var(--bg)] p-8 text-[var(--muted)]">Loading…</main>}><SpotSetupContent /></Suspense>;
 }
