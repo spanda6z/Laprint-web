@@ -108,8 +108,24 @@ export default function Discover() {
         </div>
       </section>}
 
+      <section className="mt-6 grid gap-3 md:grid-cols-3">
+        {[
+          {label:"STRONGEST BUY FLOW", items:[...allTokens].sort((a,b)=>{const aa=a.buys5m+a.sells5m,bb=b.buys5m+b.sells5m;return (bb?b.buys5m/bb:0)-(aa?a.buys5m/aa:0)}).slice(0,3)},
+          {label:"HIGHEST VOLUME", items:[...allTokens].sort((a,b)=>b.volume24h-a.volume24h).slice(0,3)},
+          {label:"NEWEST MARKETS", items:[...allTokens].sort((a,b)=>(b.createdAt||0)-(a.createdAt||0)).slice(0,3)}
+        ].map(board=><div key={board.label} className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4">
+          <div className="mono text-[8px] tracking-[.16em] text-[var(--muted)]">{board.label}</div>
+          <div className="mt-3 space-y-3">
+            {board.items.length===0?<div className="text-xs text-[var(--muted)]">No live data available.</div>:board.items.map(t=><Link key={t.address} href={"/token?address="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="flex items-center justify-between gap-3 border-t border-[var(--line)] pt-3 first:border-t-0 first:pt-0">
+              <div className="min-w-0"><div className="truncate text-sm font-semibold">{t.symbol}</div><div className="text-[9px] text-[var(--muted)]">{money(t.marketCap||0)} MC · {money(t.liquidityUsd)} LIQ</div></div>
+              <div className="mono shrink-0 text-[10px]">{pct(t.change1h)}</div>
+            </Link>)}
+          </div>
+        </div>)}
+      </section>
+
       <div className="mt-8 flex flex-col gap-3 md:flex-row">
-        <div className="relative flex-1 rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3"><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search token, symbol or contract address…" className="w-full bg-transparent pr-12 text-sm outline-none placeholder:text-[var(--muted)]" /><span className="mono pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[8px] text-[var(--muted)]">⌘K</span></div>
+        <div className="relative flex-1 rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-3"><input value={query} onChange={(e)=>setQuery(e.target.value)} placeholder="Search token, symbol, contract address or wallet…" className="w-full bg-transparent pr-12 text-sm outline-none placeholder:text-[var(--muted)]" /><span className="mono pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-[8px] text-[var(--muted)]">⌘K</span></div>
         {query&&<button onClick={()=>setQuery("")} className="rounded-2xl border border-[var(--line-strong)] px-5 py-3 text-xs">Clear</button>}
       </div>
 
@@ -172,7 +188,7 @@ export default function Discover() {
         <div className="rounded-2xl border border-[var(--line)] p-4"><div className="mono text-[8px] text-[var(--muted)]">ACT</div><div className="mt-2 text-sm font-semibold">Watch, trade or activate Autopilot.</div></div>
       </div>
 
-      <p className="mt-8 text-[10px] leading-5 text-[var(--muted)]">Market discovery is informational. A token appearing here is not a recommendation or guarantee of performance. Data is supplied by the connected market-data provider.</p>
+      <p className="mt-8 text-[10px] leading-5 text-[var(--muted)]">FLOW surfaces market data for investigation. Market discovery is informational. A token appearing here is not a recommendation or guarantee of performance. Data is supplied by the connected market-data provider.</p>
     </section>
 
     <nav className="fixed bottom-0 left-0 right-0 z-20 grid grid-cols-4 border-t border-[var(--line)] bg-[var(--bg)]/95 p-2 backdrop-blur md:hidden">
