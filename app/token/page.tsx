@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
+import MarketResponse from "@/components/MarketResponse";
 
 type Token={
   address:string; name:string; symbol:string; image:string|null; priceUsd:string|null;
@@ -192,6 +193,8 @@ function TokenContent(){
 
           <div className="mt-6 rounded-2xl bg-[var(--panel)] p-4 text-[10px] leading-5 text-[var(--muted)]">Only fields supplied by the live discovery feed are displayed as data. Missing holder, contract, LP, or market-cap fields remain unavailable rather than being estimated or fabricated.</div>
         </section>
+
+        <MarketResponse snapshots={snapshots}/>
 
         <section className="mt-8 rounded-3xl border border-[var(--line)] p-6">
           <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
