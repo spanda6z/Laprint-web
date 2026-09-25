@@ -9,7 +9,6 @@ type Snapshot = {
   sells5m?: number;
 };
 
-const money=(n:number)=>Math.abs(n)>=1e6?"$"+(n/1e6).toFixed(1)+"M":Math.abs(n)>=1e3?"$"+(n/1e3).toFixed(1)+"K":"$"+n.toFixed(0);
 
 export default function MarketResponse({ snapshots }: { snapshots: Snapshot[] }) {
   const rows=[...snapshots].filter(x=>x.capturedAt).sort((a,b)=>new Date(a.capturedAt!).getTime()-new Date(b.capturedAt!).getTime());
