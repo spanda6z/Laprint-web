@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import ThemeToggle from "@/components/ThemeToggle";
 import FlowMark from "@/components/FlowMark";
+import MarketIntelStrip from "@/components/MarketIntelStrip";
 
 type Token = {
   address:string; name:string; symbol:string; image:string|null; priceUsd:string|null;
@@ -96,6 +97,8 @@ export default function Discover() {
         <div className="flex items-center gap-2"><span className="h-1.5 w-1.5 rounded-full bg-[var(--accent)]"/><span className="mono text-[8px] uppercase tracking-[.16em]">Data live</span><span className="text-[10px] text-[var(--muted)]">Updated {updatedLabel}</span></div>
         <div className="mono hidden text-[8px] text-[var(--muted)] sm:block">{allTokens.length} MARKETS IN CURRENT FEED</div>
       </div>
+
+      <div className="mt-6"><MarketIntelStrip tracked={allTokens.length} moving={moving} volume={money(volume)} updatedLabel={updatedLabel}/></div>
 
       {pulse.length>0&&<section className="mt-6 overflow-hidden rounded-3xl border border-[var(--line)] bg-[var(--panel)]">
         <div className="flex items-center justify-between border-b border-[var(--line)] px-5 py-4"><div><div className="mono text-[8px] tracking-[.18em] text-[var(--muted)]">MARKET PULSE</div><div className="mt-1 text-xs text-[var(--muted)]">Largest positive 1H moves in the current feed</div></div><span className="mono text-[8px] text-[var(--muted)]">LIVE</span></div>
