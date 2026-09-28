@@ -27,7 +27,6 @@ export default function Discover() {
   const [filter,setFilter]=useState<"trending"|"moving"|"volume"|"new">("trending");
   const [query,setQuery]=useState("");
   const [watching,setWatching]=useState<Set<string>>(new Set());
-  const [why,setWhy]=useState<Token|null>(null);
 
   async function load(){
     try{const r=await fetch("/api/discovery",{cache:"no-store"});setState(await r.json())}
@@ -56,20 +55,6 @@ export default function Discover() {
   const pulse=[...allTokens].sort((a,b)=>b.change1h-a.change1h).slice(0,6);
   const updated=state?.updatedAt?new Date(state.updatedAt).getTime():0;
   const updatedLabel=updated?Math.max(0,Math.floor((Date.now()-updated)/1000))+"s ago":"waiting";
-  const topFlow=useMemo(()=>[...allTokens].sort((a,b)=>{
-    const aa=a.buys1h+a.sells1h,bb=b.buys1h+b.sells1h;
-    return (bb?b.buys1h/bb:0)-(aa?a.buys1h/aa:0);
-  }).slice(0,5),[allTokens]);
-  const cause=(t:Token)=>{
-    const total=t.buys1h+t.sells1h; const buy=total?t.buys1h/total:0;
-    const reasons:string[]=[];
-    if(buy>=.6) reasons.push("Buy pressure is leading");
-    else if(buy<=.4) reasons.push("Sell pressure is leading");
-    if(t.volume1h>0&&t.volume24h>0&&(t.volume1h/t.volume24h)*24>=2) reasons.push("1H volume is elevated");
-    if(t.liquidityUsd<25000) reasons.push("Liquidity is relatively thin");
-    if(!reasons.length) reasons.push("No dominant cause in the current feed");
-    return reasons.slice(0,3);
-  };
 
   function toggleWatch(t:Token){
     try{
@@ -187,7 +172,7 @@ export default function Discover() {
             <div className="mt-4 flex items-center justify-between border-t border-[var(--line)] pt-4 text-[8px] text-[var(--muted)]"><span>NET FLOW {net5>=0?"+":""}{net5}</span><span>24H TXNS {t.buys24h+t.sells24h}</span>{t.createdAt&&<span>NEW {age(t.createdAt)}</span>}</div>
 
             <div className="mt-4 flex gap-2">
-              <button onClick={()=>toggleWatch(t)} className={"rounded-full border px-4 py-3 text-xs "+(watching.has(t.address)?"border-[var(--fg)]":"border-[var(--line-strong)]")}>{watching.has(t.address)?"Watching":"Watch"}</button><button onClick={()=>setWhy(t)} className="rounded-full border border-[var(--line-strong)] px-4 py-3 text-xs">Why?</button>
+              <button onClick={()=>toggleWatch(t)} className={"rounded-full border px-4 py-3 text-xs "+(watching.has(t.address)?"border-[var(--fg)]":"border-[var(--line-strong)]")}>{watching.has(t.address)?"Watching":"Watch"}</button>
               <Link href={"/token?address="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="flex-1 rounded-full bg-[var(--fg)] px-4 py-3 text-center text-xs font-bold text-[var(--bg)]">Investigate</Link>
               <Link href={"/trade?token="+encodeURIComponent(t.address)+"&symbol="+encodeURIComponent(t.symbol)} className="rounded-full border border-[var(--line-strong)] px-4 py-3 text-xs">Trade</Link>
             </div>
