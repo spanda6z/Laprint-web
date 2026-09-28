@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import ThemeToggle from "@/components/ThemeToggle";
+import FlowScore from "@/components/FlowScore";
+import FlowShareCard from "@/components/FlowShareCard";
 
 type Token={
   address:string; name:string; symbol:string; image:string|null; priceUsd:string|null;
@@ -140,6 +142,11 @@ function TokenContent(){
             </div>
           </aside>
         </div>
+
+        <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_.9fr]">
+          <FlowScore token={t} />
+          <FlowShareCard token={t} />
+        </section>
 
         <section className="mt-8 rounded-3xl border border-[var(--line)] p-6">
           <div className="mono text-[9px] text-[var(--muted)]">MARKET DETAILS</div>
