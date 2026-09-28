@@ -121,7 +121,7 @@ function TradeContent() {
         <div className="mt-16 mono text-[10px] text-[var(--muted)]">SOLANA / TRADE</div>
         <h1 className="mt-4 text-4xl font-semibold">Trade {symbol}.</h1>
         <p className="mt-3 max-w-xl text-sm leading-6 text-[var(--muted)]">
-          Live Jupiter routing with user-signed execution. La😂Print never receives or stores your wallet private key.
+          Live Jupiter routing with user-signed execution. FLOW never receives or stores your wallet private key.
         </p>
 
         <div className="mt-8 grid gap-5 md:grid-cols-[1.2fr_.8fr]">
