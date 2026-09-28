@@ -13,7 +13,7 @@ type Token={
   buys5m:number; sells5m:number; buys1h:number; sells1h:number; buys24h?:number; sells24h?:number; marketCap?:number|null;
   marketCapUsd?:number|null; fdvUsd?:number|null; holders?:number|null;
   txns5m?:number|null; txns1h?:number|null;
-  mintAuthority?:string|null; freezeAuthority?:string|null; lpStatus?:string|null; createdAt?:number|null;
+  mintAuthority?:string|null; freezeAuthority?:string|null; lpStatus?:string|null; top10Pct?:number|null; createdAt?:number|null;
 };
 
 const money=(n:number)=>n>=1e6?"$"+(n/1e6).toFixed(1)+"M":n>=1e3?"$"+(n/1e3).toFixed(1)+"K":"$"+n.toFixed(0);
@@ -35,6 +35,7 @@ function TokenContent(){
   const [socialConfigured,setSocialConfigured]=useState(false);
   const [events,setEvents]=useState<any[]>([]);
   const [snapshots,setSnapshots]=useState<any[]>([]);
+  const [flow,setFlow]=useState<any>(null);
 
   async function load(){
     if(!address)return;
@@ -47,9 +48,13 @@ function TokenContent(){
   }
 
   useEffect(()=>{
+    if(!address)return;
+    const symbol=q.get("symbol")||"";
     void load();
-    const socialLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/social-signals?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setSocial(Array.isArray(d.signals)?d.signals:[]);setSocialConfigured(Boolean(d.configured));}catch{setSocial([])}};
-    const eventsLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/token-events?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setEvents(Array.isArray(d.events)?d.events:[]);setSnapshots(Array.isArray(d.snapshots)?d.snapshots:[]);}catch{setEvents([])}};
+    const flowLoad=async()=>{try{const r=await fetch(`/api/flow/token?mint=${encodeURIComponent(address)}`,{cache:"no-store"});const d=await r.json();if(d.ok){setFlow(d.flow);setT((current:Token|null)=>current?({...current,top10Pct:d.security?.top10Pct??null,mintAuthority:d.security?.mintAuthorityActive==null?null:String(d.security.mintAuthorityActive),freezeAuthority:d.security?.freezeAuthorityActive==null?null:String(d.security.freezeAuthorityActive)}):current);}}catch{setFlow(null)}};
+    const socialLoad=async()=>{try{const r=await fetch(`/api/social-signals?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(symbol)}`,{cache:"no-store"});const d=await r.json();setSocial(Array.isArray(d.signals)?d.signals:[]);setSocialConfigured(Boolean(d.configured));}catch{setSocial([])}};
+    const eventsLoad=async()=>{try{const r=await fetch(`/api/token-events?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(symbol)}`,{cache:"no-store"});const d=await r.json();setEvents(Array.isArray(d.events)?d.events:[]);setSnapshots(Array.isArray(d.snapshots)?d.snapshots:[]);}catch{setEvents([])}};
+    void flowLoad();
     void socialLoad();
     void eventsLoad();
     const id=window.setInterval(load,30000);
@@ -144,7 +149,7 @@ function TokenContent(){
         </div>
 
         <section className="mt-8 grid gap-6 lg:grid-cols-[1fr_.9fr]">
-          <FlowScore token={t} />
+          <FlowScore token={t} result={flow} />
           <FlowShareCard token={t} />
         </section>
 
@@ -156,7 +161,7 @@ function TokenContent(){
 
           <div className="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5">
             <div className="flex items-center justify-between gap-4">
-              <div><div className="mono text-[9px] text-[var(--muted)]">FLOW SUMMARY</div><div className="mt-1 text-sm">Buy and sell activity across the live feed</div></div>
+              <div><div className="mono text-[9px] text-[var(--muted)]">FLOW SUMMARY</div><div className="mt-1 text-sm">{flow?.label || "Score is being calculated from live inputs"}</div></div>
               <div className="mono text-[9px] text-[var(--muted)]">24H</div>
             </div>
             <div className="mt-5 grid grid-cols-2 gap-3 md:grid-cols-4">
@@ -207,7 +212,7 @@ function TokenContent(){
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
             <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">PRICE</div><div className="mt-2 text-xl font-semibold">{t.change1h>=0?"+":""}{t.change1h.toFixed(1)}% <span className="text-xs font-normal text-[var(--muted)]">1H</span></div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">Current price movement in the live discovery feed.</p></div>
-            <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">FLOW</div><div className="mt-2 text-xl font-semibold">{stats?.buyPressure}% <span className="text-xs font-normal text-[var(--muted)]">BUY PRESSURE</span></div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">{compact(t.buys5m)} buys vs {compact(t.sells5m)} sells in the latest 5M window.</p></div>
+            <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">FLOW</div><div className="mt-2 text-xl font-semibold">{flow?.buyPressure == null ? "—" : Math.round(flow.buyPressure)+"%"} <span className="text-xs font-normal text-[var(--muted)]">BUY PRESSURE</span></div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">{compact(t.buys5m)} buys vs {compact(t.sells5m)} sells in the latest 5M window.</p></div>
             <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-4"><div className="mono text-[8px] text-[var(--muted)]">VOLUME</div><div className="mt-2 text-xl font-semibold">{money(t.volume24h)}</div><p className="mt-2 text-[10px] leading-5 text-[var(--muted)]">Reported 24H trading volume from the market-data feed.</p></div>
           </div>
           <div className="mt-6 rounded-2xl border border-[var(--line)] bg-[var(--panel)] p-5">
