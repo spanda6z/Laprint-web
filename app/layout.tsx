@@ -10,6 +10,7 @@ export const metadata: Metadata = {
     title: "FLOW — Why is it moving?",
     description: "Solana market intelligence for understanding the flow behind every move.",
     type: "website",
+    images: [{ url: "/opengraph-image" }],
     siteName: "FLOW",
   },
   twitter: {
