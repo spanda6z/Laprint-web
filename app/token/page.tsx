@@ -48,10 +48,12 @@ function TokenContent(){
   }
 
   useEffect(()=>{
+    if(!address)return;
+    const symbol=q.get("symbol")||"";
     void load();
     const flowLoad=async()=>{try{const r=await fetch(`/api/flow/token?mint=${encodeURIComponent(address)}`,{cache:"no-store"});const d=await r.json();if(d.ok){setFlow(d.flow);setT((current:Token|null)=>current?({...current,top10Pct:d.security?.top10Pct??null,mintAuthority:d.security?.mintAuthorityActive==null?null:String(d.security.mintAuthorityActive),freezeAuthority:d.security?.freezeAuthorityActive==null?null:String(d.security.freezeAuthorityActive)}):current);}}catch{setFlow(null)}};
-    const socialLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/social-signals?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setSocial(Array.isArray(d.signals)?d.signals:[]);setSocialConfigured(Boolean(d.configured));}catch{setSocial([])}};
-    const eventsLoad=async()=>{if(!address)return;try{const r=await fetch(`/api/token-events?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(q.get("symbol")||"")}`,{cache:"no-store"});const d=await r.json();setEvents(Array.isArray(d.events)?d.events:[]);setSnapshots(Array.isArray(d.snapshots)?d.snapshots:[]);}catch{setEvents([])}};
+    const socialLoad=async()=>{try{const r=await fetch(`/api/social-signals?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(symbol)}`,{cache:"no-store"});const d=await r.json();setSocial(Array.isArray(d.signals)?d.signals:[]);setSocialConfigured(Boolean(d.configured));}catch{setSocial([])}};
+    const eventsLoad=async()=>{try{const r=await fetch(`/api/token-events?address=${encodeURIComponent(address)}&symbol=${encodeURIComponent(symbol)}`,{cache:"no-store"});const d=await r.json();setEvents(Array.isArray(d.events)?d.events:[]);setSnapshots(Array.isArray(d.snapshots)?d.snapshots:[]);}catch{setEvents([])}};
     void flowLoad();
     void socialLoad();
     void eventsLoad();
